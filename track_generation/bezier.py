@@ -1,3 +1,8 @@
+from __future__ import annotations
+from typing import TYPE_CHECKING
+
+import pygame
+
 class Bezier:
     PASCAL = [
              [1],
@@ -8,11 +13,14 @@ class Bezier:
         [1,5,10,10,5,1],    
        [1,6,15,20,15,6,1]] 
     
+    LINE_THICKNESS = 1
+    CUBIC = 1
+    QUADRATIC = 0
+    
     def __init__(self, id: int, interval: float = 0.01) -> None:
         self.interval = interval
     
-    # parametric curve
-    # t varies from 0 to 1 in constant intervals
+    # used for n bezier curves, implemented although its not used
     def _binomial(self, n: int, k: int) -> int:
         while (n >= len(self.PASCAL)):
             rows = len(self.PASCAL)
@@ -25,14 +33,46 @@ class Bezier:
             self.PASCAL.append(new_row)
         return self.PASCAL[n][k]
 
-    def _cubic_bezier(t: float) -> float:
+
+    def _cubic_bezier(self, t: float, w: list[float]) -> float:
         mt = 1-t
-        return (mt^3) + (3 * mt^2*t) + (3 * mt*t^2) + t^3
+        return (w[0] * mt**3) + (w[1] * 3 * mt** 2 * t) + (w[2] * 3 * mt*t**2) + (w[3] *t**3)
     
-    def _n_bezer(n: int, t: float) -> float:
-        
-        return 
+    def _quadratic_bezier(self, t: float, w: list[float]) -> float:
+        mt = 1-t
+        return (w[0] * mt**2) + (w[1]*2*mt*t) + (w[2] * t**2) 
               
-if __name__ == '__main__':
-    bezier = Bezier(1)
-    print(bezier._binomial(10, 1))
+    def _n_bezier(self, curve_type: int, wx: list[float], wy: list[float], t: float) -> list[float]:
+        if curve_type == self.CUBIC:
+            return [
+                self._cubic_bezier(t, wx),
+                self._cubic_bezier(t, wy)    
+            ]
+        elif curve_type == self.QUADRATIC:
+            return [
+                self._quadratic_bezier(t, wx),
+                self._quadratic_bezier(t, wy)
+            ]
+              
+    def generate_bezier(self, curve_type: int,  wx: list[float], wy: list[float]) -> list[list[float]]:
+        curve_coordinates = []
+        t = 0
+        
+        while t <= 1:
+            curve_coordinates.append(self._n_bezier(curve_type, wx, wy, t))
+            t+= self.interval
+        return curve_coordinates
+    
+    def render_bezier(self, bezier_coords: list[tuple], screen: pygame.Surface) -> None:
+        num_coords = len(bezier_coords)
+        for i in range(0, num_coords):
+            current_point = i
+            next_point = i + 1
+            
+            # don't joint the last two points
+            if next_point > num_coords - 1:
+                continue   
+            
+            pygame.draw.line(screen, (0,255,0), bezier_coords[current_point], bezier_coords[next_point], self.LINE_THICKNESS)
+            
+            

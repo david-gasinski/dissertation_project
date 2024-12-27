@@ -2,9 +2,9 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from track_gen.track import Track
+from bezier import Bezier
 
 import pygame
-import math
 
 if TYPE_CHECKING:
     from .window import Window
@@ -28,8 +28,15 @@ class EventLoop():
             [x_offset, self.config['width'] - x_offset],
             [y_offset, self.config['height'] - y_offset]
         )
-        self.track = Track(100, track_bounds[0], track_bounds[1], 2021)
+        self.track = Track(100, track_bounds[0], track_bounds[1], 10000000)
         self.track.generate_track()
+        
+        self.bezier = Bezier(1, 0.01)
+        
+        weights_x = [300, 350 ,400]
+        weights_y = [400, 300, 400]
+        
+        self.bezier_coords = self.bezier.generate_bezier(self.bezier.QUADRATIC,weights_x, weights_y)
         
         # start rendering
         self.render()
@@ -48,7 +55,8 @@ class EventLoop():
                 self.track.render(self.screen)
                 
             if self.render_bezier:
-                pass    
+               self.bezier.render_bezier(self.bezier_coords, self.screen)
+                
                  
             # to here
             pygame.display.flip()

@@ -1,13 +1,16 @@
+from track_gen.utils import clamp
+
 import scipy
 import pygame
 import numpy as np
 import scipy.spatial
-import math
+import bezier
 
 class Track():
-    POINT_OFFSET = 200
-    NUM_OFFSET_POINTS = 6
+    POINT_OFFSET = 75
+    NUM_OFFSET_POINTS = 5
     OFFSET_SCALE_FROM_CENTER = 0.3
+    BEZIER_INTERPOLATION_WEIGHTING = 0.875
     
     def __init__(self, num_points: int, x_bounds: list[int], y_bounds: list[int], seed: int = None):
         self.num_points = num_points
@@ -18,11 +21,11 @@ class Track():
         self.points = None
         self.hull_vertices = None
         self.midpoints = None
-        
+        self._bezier =  bezier.Bezier(1, 0.01)
+                
     def render(self, screen: pygame.Surface):
         #if self.points.any() or self.hull_vertices.any():
         #    return
-        
         for point in self.points:
             pygame.draw.circle(screen, (0,0,255),  (point[0], point[1]), 1)
             
@@ -32,9 +35,8 @@ class Track():
             
             if next_point > len(self.hull_vertices) - 1:
                 next_point = 0    
-            
             pygame.draw.line(screen, (255,0,0), self.hull_vertices[current_point], self.hull_vertices[next_point], 1)
-            
+
         for point in self.hull_vertices:
             pygame.draw.circle(screen, (255,0,00),  (point[0], point[1]), 1)
             
@@ -55,10 +57,54 @@ class Track():
         convex_hull = scipy.spatial.ConvexHull(self.points)
         self.hull_vertices = self.points[convex_hull.vertices]
     
-        # randomly offset set amount of points points
+        # randomly offset set amount of points 
+        # make sure these points arent neighbours
         for i in range(self.NUM_OFFSET_POINTS):
             self.hull_vertices = self._offset_random_point(self.hull_vertices)
+            
+        num_vertices = len(self.hull_vertices)
         
+        
+        # apply bezier curves by selection 2 random weighted midpoints
+        for i in range(0, num_vertices):
+            previous_vertex = clamp(num_vertices + i, 0, num_vertices)
+            current_vertex = i
+            next_vertex = clamp(i + 1, 0, num_vertices)
+     
+            # for each vertex
+            # get the previous, current and next
+            # find points on the interpolated lines 75* of the way through towards the current point
+            # use these are the base of the quadractic bezier
+            midpoint_start = self._weighted_midpoint(
+                self.hull_vertices[previous_vertex], self.hull_vertices[current_vertex], 
+                self.BEZIER_INTERPOLATION_WEIGHTING
+            )
+            midpoint_end = self._weighted_midpoint(
+                self.hull_vertices[next_vertex], self.hull_vertices[current_vertex], 
+                self.BEZIER_INTERPOLATION_WEIGHTING
+            )
+            weighted_point = self.hull_vertices[current_vertex]
+            
+            # calculate the coordinates
+            bezier_coordinates = self._bezier.generate_bezier(
+                self._bezier.QUADRATIC, 
+                [midpoint_start[0], weighted_point[0], midpoint_end[0]], # x weights
+                [midpoint_start[1], weighted_point[1], midpoint_end[1]], # y weights
+            )
+            
+            # remove the current index and replace it with the resultant
+            # array of bezier coordinates
+            
+            
+            
+            return
+        
+    def _apply_bezier(self, point_index: int,  wx: list[float], wy:list[float]) -> np.ndarray:
+        bezier_coords = self._bezier.generate_bezier(bezier.Bezier.QUADRATIC, wx, wy)
+        
+        # remove the coordinate of the point and replace it with bezier
+        
+        return
         
     def _offset_random_point(self, points):
         # for a random vertex, find its midpoint and offset it by a random scale factor
@@ -78,7 +124,7 @@ class Track():
             (p1[1] + p2[1]) / 2
         )    
         
-    def _weighted_midpoint(p1, p2, pos):
+    def _weighted_midpoint(self, p1: tuple, p2: tuple, pos: float):
         return (
             (1- pos) * p1[0] + pos * p2[0],
             (1- pos) * p1[1] + pos * p2[1]
