@@ -10,7 +10,7 @@ class Track():
     POINT_OFFSET = 75
     NUM_OFFSET_POINTS = 5
     OFFSET_SCALE_FROM_CENTER = 0.3
-    BEZIER_INTERPOLATION_WEIGHTING = 0.875
+    BEZIER_INTERPOLATION_WEIGHTING = 0.9
     
     def __init__(self, num_points: int, x_bounds: list[int], y_bounds: list[int], seed: int = None):
         self.num_points = num_points
@@ -20,27 +20,32 @@ class Track():
         
         self.points = None
         self.hull_vertices = None
+        self.track_vertices = []
+        self.alternative_track_vertices = []
         self.midpoints = None
         self._bezier =  bezier.Bezier(1, 0.01)
+        
+        self._render_alternative = True
                 
     def render(self, screen: pygame.Surface):
         #if self.points.any() or self.hull_vertices.any():
         #    return
-        for point in self.points:
-            pygame.draw.circle(screen, (0,0,255),  (point[0], point[1]), 1)
-            
-        for i in range(0, len(self.hull_vertices)):
-            current_point = i
-            next_point = i + 1
-            
-            if next_point > len(self.hull_vertices) - 1:
-                next_point = 0    
-            pygame.draw.line(screen, (255,0,0), self.hull_vertices[current_point], self.hull_vertices[next_point], 1)
+        #
+        if not self._render_alternative:
+            for i in range(0, len(self.track_vertices)):
+                current_point = i
+                next_point = clamp(i + 1, 0, len(self.track_vertices) - 1)            
 
-        for point in self.hull_vertices:
-            pygame.draw.circle(screen, (255,0,00),  (point[0], point[1]), 1)
+                pygame.draw.line(screen, (255,0,0), self.track_vertices[current_point], self.track_vertices[next_point], 1)
+        elif self._render_alternative:
+            for i in range (0, len(self.alternative_track_vertices)):
+                current_point = i
+                next_point = clamp(i+1, 0, len(self.alternative_track_vertices) - 1)
+
+                pygame.draw.line(screen, (255,0,0), self.alternative_track_vertices[current_point], self.alternative_track_vertices[next_point], 1)
+
+
             
-        
     def generate_track(self):
         # generate a random number of points and get the convex hull
         x_coords = self.rng.uniform(self.x_bounds[0], self.x_bounds[1], self.num_points)
@@ -64,12 +69,11 @@ class Track():
             
         num_vertices = len(self.hull_vertices)
         
-        
         # apply bezier curves by selection 2 random weighted midpoints
         for i in range(0, num_vertices):
-            previous_vertex = clamp(num_vertices + i, 0, num_vertices)
+            previous_vertex = clamp(num_vertices + i, 0, num_vertices-1)
             current_vertex = i
-            next_vertex = clamp(i + 1, 0, num_vertices)
+            next_vertex = clamp(i + 1, 0, num_vertices-1)
      
             # for each vertex
             # get the previous, current and next
@@ -92,12 +96,13 @@ class Track():
                 [midpoint_start[1], weighted_point[1], midpoint_end[1]], # y weights
             )
             
-            # remove the current index and replace it with the resultant
-            # array of bezier coordinates
+            self.track_vertices.extend(bezier_coordinates)
             
-            
-            
-            return
+        self.alternative_track_vertices = self._bezier.generate_bezier(
+            len(self.hull_vertices),
+            self.hull_vertices[:,0],
+            self.hull_vertices[:,1]
+        )
         
     def _apply_bezier(self, point_index: int,  wx: list[float], wy:list[float]) -> np.ndarray:
         bezier_coords = self._bezier.generate_bezier(bezier.Bezier.QUADRATIC, wx, wy)

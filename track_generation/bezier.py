@@ -1,6 +1,8 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
 
+import numpy
+
 import pygame
 
 class Bezier:
@@ -17,7 +19,11 @@ class Bezier:
     CUBIC = 1
     QUADRATIC = 0
     
+    QUADRATIC_RATIOS = [1, 1, 1]
+    CUBIC_RATIOS = [ 1, 0.5,0.5,1 ]
+    
     def __init__(self, id: int, interval: float = 0.01) -> None:
+        self.id = id
         self.interval = interval
     
     # used for n bezier curves, implemented although its not used
@@ -33,14 +39,22 @@ class Bezier:
             self.PASCAL.append(new_row)
         return self.PASCAL[n][k]
 
+    
+    def _n_bezier_(self, n: int, t: float, w: list[float]):
+        sum = 0
+        for k in range (0, n):
+            sum += w[k] * self._binomial(n,k) * (1-t)**(n-k) * (t**k)
+        return sum
 
     def _cubic_bezier(self, t: float, w: list[float]) -> float:
         mt = 1-t
-        return (w[0] * mt**3) + (w[1] * 3 * mt** 2 * t) + (w[2] * 3 * mt*t**2) + (w[3] *t**3)
+        rational = (self.CUBIC_RATIOS[0] * mt**3) + (self.CUBIC_RATIOS[1] * 3 * mt** 2 * t) + (self.CUBIC_RATIOS[2] * 3 * mt*t**2) + (self.CUBIC_RATIOS[3] *t**3)
+        return ((w[0] * mt**3) + (w[1] * 3 * mt** 2 * t) + (w[2] * 3 * mt*t**2) + (w[3] *t**3)) / rational
     
     def _quadratic_bezier(self, t: float, w: list[float]) -> float:
         mt = 1-t
-        return (w[0] * mt**2) + (w[1]*2*mt*t) + (w[2] * t**2) 
+        rational = (self.QUADRATIC_RATIOS[0] * mt**2) + (self.QUADRATIC_RATIOS[1]*2*mt*t) + (self.QUADRATIC_RATIOS[2] * t**2)
+        return ((w[0] * mt**2) + (w[1]*2*mt*t) + (w[2] * t**2)) 
               
     def _n_bezier(self, curve_type: int, wx: list[float], wy: list[float], t: float) -> list[float]:
         if curve_type == self.CUBIC:
@@ -53,6 +67,10 @@ class Bezier:
                 self._quadratic_bezier(t, wx),
                 self._quadratic_bezier(t, wy)
             ]
+        return [
+            self._n_bezier_(curve_type, t, wx),
+            self._n_bezier_(curve_type, t, wy)
+        ]
               
     def generate_bezier(self, curve_type: int,  wx: list[float], wy: list[float]) -> list[list[float]]:
         curve_coordinates = []

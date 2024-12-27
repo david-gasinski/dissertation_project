@@ -28,7 +28,7 @@ class EventLoop():
             [x_offset, self.config['width'] - x_offset],
             [y_offset, self.config['height'] - y_offset]
         )
-        self.track = Track(100, track_bounds[0], track_bounds[1], 10000000)
+        self.track = Track(100, track_bounds[0], track_bounds[1], 100)
         self.track.generate_track()
         
         self.bezier = Bezier(1, 0.01)
