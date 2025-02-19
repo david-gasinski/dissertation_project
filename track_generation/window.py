@@ -11,7 +11,7 @@ class Window():
         self.config = None
         self._load_config(self.CONFIG_PATH)
         
-        self.screen = pygame.display.set_mode([self.config['width'], self.config['height']])
+        self.screen = pygame.display.set_mode([self.config['WIDTH'], self.config['HEIGHT']])
         
         # create event loop
         self.event_loop = EventLoop(self, self.screen, self.config)        
