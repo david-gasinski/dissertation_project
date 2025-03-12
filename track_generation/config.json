@@ -1,12 +1,12 @@
 {
     "WIDTH": 800, 
     "HEIGHT": 800,
-    "POINT_OFFSET": 100,
-    "NUM_OFFSET_POINTS": 5,
-    "MIN_OFFSET_MIDPOINT": 0.1,
-    "MAX_OFFSET_MIDPOINT" : 0.2,
-    "MIN_MIDPOINT_WEIGHTING": 0.6,
-    "MAX_MIDPOINT_WEIGHTING": 0.9,
-    "TRACK_IMG_FOLDER": "/home/david/workspace/dissertation_project/track_generation/tracks",
-    "NUM_POINTS": 1500
+    "POINT_OFFSET": 30,
+    "NUM_OFFSET_POINTS": 15,
+    "MIN_OFFSET_MIDPOINT": 0.75,
+    "MAX_OFFSET_MIDPOINT" : 1,
+    "MIN_MIDPOINT_WEIGHTING": 0.3,
+    "MAX_MIDPOINT_WEIGHTING": 0.7,
+    "TRACK_IMG_FOLDER": "tracks/",
+    "NUM_POINTS": 1000
 }

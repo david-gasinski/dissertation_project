@@ -19,9 +19,7 @@ class EventLoop():
         self.screen = screen
         self.config = config
         self.window = window
-        
-        
-        
+                
         self.running = True
         
         self.render_track = True

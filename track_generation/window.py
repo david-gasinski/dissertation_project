@@ -1,8 +1,9 @@
+from event_loop import EventLoop
+
 import pygame
 import json
 import sys
 
-from event_loop import EventLoop
 
 class Window():
     CONFIG_PATH = "config.json"
@@ -10,12 +11,10 @@ class Window():
     def __init__(self):
         self.config = None
         self._load_config(self.CONFIG_PATH)
-        
         self.screen = pygame.display.set_mode([self.config['WIDTH'], self.config['HEIGHT']])
         
         # create event loop
         self.event_loop = EventLoop(self, self.screen, self.config)        
-        
         
     def _load_config(self, config_path: str) -> None:
         try:

@@ -5,11 +5,21 @@ import numpy as np
 import scipy.spatial
 import matplotlib.pyplot as plt
 
+from utils import LinearAlgebra
+
 @dataclass
-class Genotype:
+class ControlPointTangent:
+    m_x: float
+    m_y: float
+
+@dataclass
+class ControlPoint:
     radial_distance : float
     angular_distance : float
-    tangent: float
+    tangent: ControlPointTangent
+    x: float
+    y: float
+    
     
 class Track():
     
@@ -25,32 +35,72 @@ class Track():
         return
         
     def generate_track(self):
-        # generate a random number of points and get the convex hull
+        # generate a fixed number of points in random locations
         x_coords = self.rng.uniform(self.x_bounds[0], self.x_bounds[1], self.num_points)
         y_coords = self.rng.uniform(self.y_bounds[0], self.y_bounds[1], self.num_points)
         
         self.points = np.column_stack((x_coords, y_coords))
-        
-        self.hull_vertices = self.points
-        plt.scatter(self.hull_vertices[::, 0], self.hull_vertices[::, 1])
+
+        plt.scatter(self.points[::, 0], self.points[::, 1])
         plt.show()
         
         # find the radial distance    
         radial_dist = np.sqrt(
-            np.power((self.hull_vertices[::,0] - self.midpoint[0]), 2) + 
-            np.power((self.hull_vertices[::,1] - self.midpoint[1]), 2)
+            np.power((self.points[:,0] - self.midpoint[0]), 2) + 
+            np.power((self.points[:,1] - self.midpoint[1]), 2)
         )
         
         # find the cosine angle between up vector [0,1] 
         up_vec = np.array([0,1]) 
         up_vec_norm = up_vec / np.linalg.norm(up_vec)
 
-        hull_vertices_norm = self.hull_vertices / np.linalg.norm(self.hull_vertices, axis=1, keepdims=True)
+        hull_vertices_norm = self.points / np.linalg.norm(self.points, axis=1, keepdims=True)
         
         cosine_angles = np.dot(hull_vertices_norm, up_vec_norm)
+        
+        # angular distances
         inverse_cos = np.arccos(cosine_angles) * (180/math.pi)
-        print(inverse_cos)
-    
+        
+        # find the slopes of each point 
+        slopes = self.points[:, 1] / self.points[:, 0]
+        
+        line_eq = LinearAlgebra.line_eq(
+            slopes[0], self.points[0,0],  -100, 100, 200
+        )
+        
+        # get slope inverse
+        slopes = - (1 / slopes)
+
+        line_eq_tan = LinearAlgebra.line_eq_tan(
+            slopes[0], self.points[0,0], self.points[0,1], -100, 100, 200
+        )
+        
+        point_normals = LinearAlgebra.line_eq_tan_np(
+            slopes, self.points[:,0 ], self.points[:, 1], -100, 100, 200
+        )
+        
+        # Plot each line
+        plt.figure(figsize=(8, 8))
+        for i in range(point_normals.shape[1]):
+            plt.plot(point_normals[:, 0], point_normals[:, 1], label=f'Line {i+1}')
+            plt.scatter(self.points[i, 0], self.points[i, 1])
+            plt.plot(line_eq[:, 0], line_eq[:, 1])
+        plt.scatter(0,0)
+                        
+        # plt.scatter(self.points[0, 0], self.points[0, 1])
+        # plt.plot(line_eq_tan[:, 0], line_eq_tan[:, 1])
+        
+        # Add labels, title, and legend
+        plt.xlabel('x')
+        plt.ylabel('y')
+        plt.title('Plotting Multiple Lines from a NumPy Array')
+        plt.legend()
+        plt.grid(True)
+        # Show the plot
+        plt.show()
+                    
+        
+          
 config = {
     "WIDTH": 800, 
     "HEIGHT": 800,
