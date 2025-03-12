@@ -25,6 +25,9 @@ class Track():
         self.hull_vertices = None
         self.track_vertices = []
         
+        self.genotype = []
+        
+        
         self.offset_vertices = []
 
         self._bezier =  bezier.Bezier(1, 0.01)
@@ -35,7 +38,18 @@ class Track():
             current_point = i
             next_point = clamp(i + 1, 0, len(self.track_vertices))            
         
+            # draw line
             pygame.draw.line(screen, (255,0,0), self.track_vertices[current_point], self.track_vertices[next_point], 1)
+            
+        # plot the convex hull and its vertices
+        for i in range(0, len(self.hull_vertices)):
+            current_point = i
+            next_point = clamp(i+1, 0, len(self.hull_vertices))
+            
+            pygame.draw.line(screen, (0,255,0), self.hull_vertices[current_point], self.hull_vertices[next_point], 1)
+            pygame.draw.circle(screen, (0,0,255), self.hull_vertices[i], 1, 1)
+
+            
 
     def generate_track(self):
         # generate a random number of points and get the convex hull
@@ -89,8 +103,7 @@ class Track():
             )
             
             self.track_vertices.extend(bezier_coordinates)
-    
-    
+
     def _offset_random_point(self, points):
                     
         # for a random vertex, find its midpoint and offset it by a random scale factor
