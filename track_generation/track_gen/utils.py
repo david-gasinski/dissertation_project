@@ -17,8 +17,8 @@ class LinearAlgebra:
             return array of points on line with gradient slope and base b_x, b_y
         """
         t = np.linspace(i_min, i_max, i)[:, np.newaxis]
-        return np.column_stack(
-            (t.T + b_x[:, np.newaxis], (slope * t.T) + b_y)
+        return np.vstack(
+            (t.T + b_x, (slope * t.T) + b_y)
         )
         
     @staticmethod
@@ -148,3 +148,9 @@ class PerlinNoise:
     @staticmethod
     def linear_interp(a, b, x):
         return a + x * (b-a)
+    
+def convert_to_screen(coords: list[float]) -> list[float]:
+    return [coords[0] + 400, coords[1] + 400]
+
+def convert_to_screen_scalar(coord: float) -> float:
+    return coord + 400

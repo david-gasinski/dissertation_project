@@ -15,7 +15,7 @@ class Window():
         
         # create event loop
         self.event_loop = EventLoop(self, self.screen, self.config)        
-        
+    
     def _load_config(self, config_path: str) -> None:
         try:
             with open(config_path) as f:

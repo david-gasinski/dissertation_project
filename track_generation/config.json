@@ -12,6 +12,8 @@
         "NUM_POINTS": 1000
     },
     "CONTROL_POINT" : {
-        "NUM_POINTS": 10
+        "NUM_POINTS": 5,
+        "WIDTH": 800, 
+        "HEIGHT": 800
     }
 }
