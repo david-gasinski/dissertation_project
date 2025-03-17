@@ -2,7 +2,8 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from pathlib import Path
-from track_gen.track import Track
+from track_gen.track import Track as convex_hull_track
+from track_gen.alternative_track import Track as control_point_track
 from track_gen.bezier import Bezier
 
 import pygame
@@ -25,34 +26,49 @@ class EventLoop():
         self.render_track = True
         self.render_bezier = False
         
+        self.alternative_track_gen = True
+        
         # create a new track
         x_offset = self.config['WIDTH'] / 4
         y_offset = self.config['HEIGHT'] / 4
         track_bounds = (
-            [x_offset, self.config['WIDTH'] - x_offset],
-            [y_offset, self.config['HEIGHT'] - y_offset]
+            [-x_offset, x_offset],
+            [-y_offset, y_offset]
         )
-        
         
         self.tracks = []
         self._num_tracks = 100
         self._rng = np.random.default_rng()
         
-        for i in range(0, self._num_tracks):
-            self.tracks.append(
-                Track(self.config["NUM_POINTS"], track_bounds[0], track_bounds[1], self.config,  self._rng.integers(low=0, high=43918403, size=1))
-            )
-            self.tracks[i].generate_track()
+        if not self.alternative_track_gen:
+            config = self.config['CONVEX']
             
-        self.track = Track(2000, track_bounds[0], track_bounds[1], self.config, 80)
-        self.track.generate_track()
+            for i in range(0, self._num_tracks):
+                self.tracks.append(
+                    convex_hull_track(config["NUM_POINTS"], track_bounds[0], track_bounds[1], config,  self._rng.integers(low=0, high=43918403, size=1))
+                )
+                self.tracks[i].generate_track()
         
-        self.bezier = Bezier(1, 0.01)
+        elif self.alternative_track_gen:
+            
+            config = self.config['CONTROL_POINT']
+            
+            for i in range(0, self._num_tracks):
+                self.tracks.append(
+                    control_point_track(config["NUM_POINTS"], track_bounds[0], track_bounds[1], config, self._rng.integers(low=0, high=43918403, size=1))
+                )
+            self.tracks[i].generate_track();
         
-        weights_x = [300, 350 ,400]
-        weights_y = [400, 300, 400]
+        """REMOVE"""
+        #self.track = convex_hull_track(2000, track_bounds[0], track_bounds[1], self.config, 80)
+        #self.track.generate_track()
         
-        self.bezier_coords = self.bezier.generate_bezier(self.bezier.QUADRATIC,weights_x, weights_y)
+        #self.bezier = Bezier(1, 0.01)
+        
+        #weights_x = [300, 350 ,400]
+        #weights_y = [400, 300, 400]
+        
+        #self.bezier_coords = self.bezier.generate_bezier(self.bezier.QUADRATIC,weights_x, weights_y)
         
         # start rendering
         self.render()

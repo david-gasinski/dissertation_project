@@ -50,7 +50,6 @@ class Track():
             pygame.draw.circle(screen, (0,0,255), self.hull_vertices[i], 1, 1)
 
             
-
     def generate_track(self):
         # generate a random number of points and get the convex hull
         x_coords = self.rng.uniform(self.x_bounds[0], self.x_bounds[1], self.num_points)
