@@ -9,8 +9,6 @@ from track_gen.bezier import Bezier
 import pygame
 import numpy as np
 
-
-
 if TYPE_CHECKING:
     from .window import Window
 
@@ -57,7 +55,7 @@ class EventLoop():
                 self.tracks.append(
                     control_point_track(config["NUM_POINTS"], track_bounds[0], track_bounds[1], config, self._rng.integers(low=0, high=43918403, size=1))
                 )
-            self.tracks[i].generate_track();
+                self.tracks[i].generate_track();
         
         """REMOVE"""
         #self.track = convex_hull_track(2000, track_bounds[0], track_bounds[1], self.config, 80)
@@ -83,7 +81,7 @@ class EventLoop():
                     self.running = False
                     
             # render here        
-            self.screen.fill((255,255,255))
+            self.screen.fill((0,0,0))
             
             if self.render_track:
                 

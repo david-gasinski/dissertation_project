@@ -2,11 +2,16 @@ import math
 import pygame
 from dataclasses import dataclass
 import numpy as np
+import scipy.spatial
+
 from typing import Union
 
 from track_gen.utils import LinearAlgebra
 from track_gen.utils  import clamp
 from track_gen.bezier import Bezier as bezier
+from track_gen.utils import convert_to_screen, convert_to_screen_scalar
+
+
  
 @dataclass
 class ControlPoint:
@@ -60,6 +65,9 @@ class Track():
         self.rng = np.random.default_rng(seed)
         self.midpoint = [0,0]
         
+        self.config = config
+        self.seed = seed
+        
         # if any of these are set to false, the track is discarded from the population 
         self.valid_track = True
         self.closed = True
@@ -70,7 +78,9 @@ class Track():
         
     
     def render(self, screen: pygame.Surface):
-        # this acts as the phenotype 
+        # create a new pygame surface object
+        
+        surface = pygame.Surface((self.config["WIDTH"], self.config["HEIGHT"]))
         
         # for each genotype
         for genotype in range(0, self.num_points):
@@ -81,35 +91,46 @@ class Track():
             next_genotype = self.genotypes[clamp(genotype+1,0, self.num_points)] 
             
             # get the point of intersection within the scope of the bounds
-            tangent_intersection = current.intersects(next_genotype, -self.x_bounds, self.x_bounds)
-                
-            if tangent_intersection[:, 0] == float('inf'):
+            tangent_intersection = current.intersects(next_genotype, self.x_bounds[0], self.x_bounds[1])
+            
+            if tangent_intersection.any() == float('inf'):
                 continue
             
             # calculate the bezier curve using the tangent intersection as the weightings
             # plot
             bezier_coords = self._bezier.generate_bezier(
                 bezier.QUADRATIC,
-                [current.x, tangent_intersection[0, 0], next_genotype.x],
-                [current.y, tangent_intersection[0, 1] ,next_genotype.y ]
+                [current.x, tangent_intersection[0], next_genotype.x],
+                [current.y, tangent_intersection[1] ,next_genotype.y ]
+            )
+            
+            pygame.draw.circle(
+                surface, (255,0,0), (convert_to_screen_scalar(current.x), convert_to_screen_scalar(current.y)), 5
+            )
+
+            pygame.draw.line(
+                surface, (0,0,255), (convert_to_screen_scalar(current.x), convert_to_screen_scalar(current.y)),
+                (convert_to_screen_scalar(next_genotype.x), convert_to_screen_scalar(next_genotype.y)), 3
             )
 
             num_coords = len(bezier_coords)
-            for coordinate in len(num_coords):
+            for coordinate in range(num_coords):
                 # clamp each coordinate
                 current_coord = coordinate
                 next_coord = clamp(coordinate+1, 0, num_coords)
                 
-                pygame.draw.line(screen, (0, 255, 0), bezier_coords[current_coord], bezier_coords[next_coord], 1)
+                pygame.draw.line(surface, (0, 255, 0), convert_to_screen(bezier_coords[current_coord]), convert_to_screen(bezier_coords[next_coord]), 1)
         
-        return
+        screen.blit(surface, (0,0))
         
     def generate_track(self):
         # generate a fixed number of points in random locations
         x_coords = self.rng.uniform(self.x_bounds[0], self.x_bounds[1], self.num_points)
         y_coords = self.rng.uniform(self.y_bounds[0], self.y_bounds[1], self.num_points)
         
-        self.points = np.column_stack((x_coords, y_coords))
+        # to ensure points are in sequence, take a convex hul first
+        self.points = scipy.spatial.ConvexHull(np.column_stack((x_coords, y_coords))).points
+        print(self.points)
         
         # find the radial distance    
         radial_dist = np.sqrt(
