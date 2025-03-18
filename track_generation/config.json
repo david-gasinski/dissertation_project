@@ -15,5 +15,17 @@
         "NUM_POINTS": 5,
         "WIDTH": 800, 
         "HEIGHT": 800
+    },
+    "convex_hull": {
+        "control_points" : 10,
+        "x_bounds": {
+            "low" : 200,
+            "high" : 600    
+        },
+        "y_bounds": {
+            "low": 200,
+            "high":  600
+        }
     }
+
 }

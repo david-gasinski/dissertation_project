@@ -2,9 +2,11 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from pathlib import Path
-from track_gen.track import Track as convex_hull_track
+from track_gen.track import Track as convex_hull_track_old
 from track_gen.alternative_track import Track as control_point_track
 from track_gen.bezier import Bezier
+
+from track_gen.tracks import convex_hull_track
 
 import pygame
 import numpy as np
@@ -24,16 +26,12 @@ class EventLoop():
         self.render_track = True
         self.render_bezier = False
         
-        self.alternative_track_gen = True
+        self.alternative_track_gen = False
         
         # create a new track
         x_offset = self.config['WIDTH'] / 4
         y_offset = self.config['HEIGHT'] / 4
-        track_bounds = (
-            [-x_offset, x_offset],
-            [-y_offset, y_offset]
-        )
-        
+    
         self.tracks = []
         self._num_tracks = 100
         self._rng = np.random.default_rng()
@@ -41,9 +39,14 @@ class EventLoop():
         if not self.alternative_track_gen:
             config = self.config['CONVEX']
             
+            track_bounds = (
+                [x_offset, x_offset*3],
+                [y_offset, y_offset*3]
+            )
+            
             for i in range(0, self._num_tracks):
                 self.tracks.append(
-                    convex_hull_track(config["NUM_POINTS"], track_bounds[0], track_bounds[1], config,  self._rng.integers(low=0, high=43918403, size=1))
+                    convex_hull_track_old(config["NUM_POINTS"], track_bounds[0], track_bounds[1], config,  self._rng.integers(low=0, high=43918403, size=1))
                 )
                 self.tracks[i].generate_track()
         
@@ -51,6 +54,11 @@ class EventLoop():
             
             config = self.config['CONTROL_POINT']
             
+            track_bounds = (
+                [-x_offset, x_offset],
+                [-y_offset, y_offset]
+            )
+        
             for i in range(0, self._num_tracks):
                 self.tracks.append(
                     control_point_track(config["NUM_POINTS"], track_bounds[0], track_bounds[1], config, self._rng.integers(low=0, high=43918403, size=1))
@@ -69,6 +77,17 @@ class EventLoop():
         #self.bezier_coords = self.bezier.generate_bezier(self.bezier.QUADRATIC,weights_x, weights_y)
         
         # start rendering
+        
+        # create a new track
+        convex_hull = convex_hull_track.ConvexHullTrack(10)
+        
+        convex_hull.encode_control_point(
+            0, 90.1, 82.1, 1.044, 1.042, 1035.2, 913.1, 48331.2
+        )        
+        
+        print(convex_hull.get_genotype())
+        
+        
         self.render()
         
     def render(self):
