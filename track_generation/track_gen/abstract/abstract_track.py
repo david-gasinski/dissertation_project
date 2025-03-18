@@ -52,10 +52,8 @@ class Track():
                 x_c2: float
                 y_c2: float 
         """
+        self.CONTROL_POINTS = np.hstack([x, y, slope, x_c1, y_c1, x_c2, y_c2])
         
-        
-        return
-    
     def render(self, screen: pygame.Surface) -> None:
         """
         A method to render the track 
