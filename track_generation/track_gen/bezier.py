@@ -49,7 +49,7 @@ class Bezier:
     def _cubic_bezier(self, t: float, w: list[float]) -> float:
         mt = 1-t
         rational = (self.CUBIC_RATIOS[0] * mt**3) + (self.CUBIC_RATIOS[1] * 3 * mt** 2 * t) + (self.CUBIC_RATIOS[2] * 3 * mt*t**2) + (self.CUBIC_RATIOS[3] *t**3)
-        return ((w[0] * mt**3) + (w[1] * 3 * mt** 2 * t) + (w[2] * 3 * mt*t**2) + (w[3] *t**3)) / rational
+        return ((w[0] * mt**3) + (w[1] * 3 * mt** 2 * t) + (w[2] * 3 * mt*t**2) + (w[3] *t**3))
     
     def _quadratic_bezier(self, t: float, w: list[float]) -> float:
         mt = 1-t
