@@ -8,6 +8,7 @@ if TYPE_CHECKING:
 class Track():
     
     CONTROL_POINTS = None
+    BEZIER_COORDINATES = None # calculate
     
     def __init__(self, control_points: int) -> None:
         """
@@ -83,3 +84,15 @@ class Track():
             Returns an encoded form of the genotype       
         """
         return self.CONTROL_POINTS
+
+    def calculate_bezier(self):
+        """
+            Using the genotype, calculates the bezier curves
+        """
+        return
+
+    def convert_to_screen(self, coords):
+        """
+            Used for rendering, converts to screen coordinates
+        """
+        return coords + 600

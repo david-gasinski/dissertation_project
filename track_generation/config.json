@@ -1,6 +1,6 @@
 {
-    "WIDTH": 800, 
-    "HEIGHT": 800,
+    "WIDTH": 1200, 
+    "HEIGHT": 1200,
     "TRACK_IMG_FOLDER": "tracks/",
     "CONVEX" : {
         "POINT_OFFSET": 30,
@@ -16,16 +16,21 @@
         "WIDTH": 800, 
         "HEIGHT": 800
     },
-    "convex_hull": {
+    "concave_hull": {
         "control_points" : 10,
         "x_bounds": {
-            "low" : 200,
-            "high" : 600    
+            "low" : -400,
+            "high" : 400    
         },
         "y_bounds": {
-            "low": 200,
-            "high":  600
-        }
+            "low": -400,
+            "high":  400
+        },
+        "width": 800,
+        "height": 800,
+        "weight_point_offset" : 40,
+        "threshold_distance": 70,
+        "straights": 2
     }
 
 }

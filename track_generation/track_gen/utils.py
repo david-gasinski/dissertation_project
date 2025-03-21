@@ -2,14 +2,28 @@ import numpy as np
 from typing import Union
 
 def clamp(value: int, min: int, max: int):
+    """
+        min: int (inclusive)
+        max: int (exclusive)
+    """
     if value >= max:
         return min + (value - max)
-    if value <= min:
+    if value < min:
         return max - (min - value)
     return value
 
 class LinearAlgebra:
     
+    @staticmethod
+    def linear_eq(slope: float, b_x: float, y_intercept: float, i_min: float, i_max: float, i: float) -> float:
+        t = np.linspace(i_min, i_max, i)
+        if (slope > 0.8):
+            t =  (t / slope) + b_x
+        else:
+            t += b_x
+        y = ((t * slope) + y_intercept)
+        return np.stack((t,y), axis=1)
+
     @staticmethod
     def line_eq(slope: float, b_x: float, b_y: float, i_min: float, i_max: float, i: float) -> np.ndarray:
         """
@@ -18,9 +32,45 @@ class LinearAlgebra:
         """
         t = np.linspace(i_min, i_max, i)[:, np.newaxis]
         return np.vstack(
-            (t.T + b_x, (slope * t.T) + b_y)
+            (t.T + b_x, (slope * (t.T + b_x)))
         )
         
+    @staticmethod
+    def intersection_bezier_curve(points: Union[list[float], np.ndarray]) -> bool:
+        # for every 2 points in the curve
+        # define a line
+        # test its intersection against other line combination
+        # O(n^2)
+        # defo a better way of doing this        
+        num_points = len(points)
+        
+        for point in range(0, num_points):
+            next_index = clamp(point + 1, 0, num_points)
+            
+            if (point == num_points - 1) or (next_index == 0):
+                    continue
+                
+            _current = points[point]
+            _next = points[next_index]
+            
+            # for all other points, find intersection 
+            for intersect_test in range(next_index, num_points):
+                next_intersect_index = clamp(intersect_test + 1, 0, num_points - 1)
+                
+                if (intersect_test == num_points - 1) or (next_intersect_index == 0):
+                    break
+                
+                _current_intersect = points[intersect_test]
+                _next_intersect = points[next_intersect_index]
+                
+                does_intersect = LinearAlgebra.do_segments_intersect(
+                    _current, _next, _current_intersect, _next_intersect
+                ) 
+                
+                if does_intersect:
+                    return True                
+        return False
+  
     @staticmethod
     def line_eq_np(slope: np.ndarray, b_x: np.ndarray, b_y: np.ndarray, i_min: float, i_max: float, i: float) -> np.ndarray:
         """
@@ -46,13 +96,21 @@ class LinearAlgebra:
         return y - (slope * x)
     
     @staticmethod 
-    def calculate_slopes(points: np.ndarray) -> np.ndarray:
+    def calculate_slopes(points: np.ndarray, origin_x: float = 0, origin_y: float = 0) -> Union[float, np.ndarray]:        
         # calculate slope, y / x
-        return points[:, 1] / points[:, 0] 
+        return (points[:, 1] - origin_y) / (points[:, 0] - origin_x) 
 
     @staticmethod
     def calculate_slope_tangent(slopes: np.ndarray) -> np.ndarray:
-        return - ( 1 / slopes )        
+        return - ( 1 / slopes )       
+    
+    @staticmethod
+    def euclidean_distance(p1: Union[list[float], np.ndarray], p2: Union[list[float], np.ndarray]) -> float:
+        # convert to numpy array
+        p1 = np.asarray(p1)
+        p2 = np.asarray(p2)            
+        
+        return np.linalg.norm(p1 - p2)
     
     @staticmethod
     def get_intersect(a1: np.ndarray, a2: np.ndarray, b1: np.ndarray, b2: np.ndarray) -> Union[np.ndarray, None]:
@@ -81,6 +139,59 @@ class LinearAlgebra:
             return np.asarray([float('inf'), float('inf')])
         
         return np.asarray([x/z, y/z])
+    
+    @staticmethod
+    def do_segments_intersect(a1: Union[list[float, np.ndarray]], a2: Union[list[float, np.ndarray]], b1: Union[list[float, np.ndarray]], b2: Union[list[float, np.ndarray]]) -> bool:
+        """
+        Test if two line segments defined by two points each intersect.
+        
+        #### Returns point of intersection of line a1->a2 and b1->b2
+        
+        """
+        # convert to numpy arrays
+        a1 = np.asarray(a1)
+        a2 = np.asarray(a2)
+
+        b1 = np.asarray(b1)
+        b2 = np.asarray(b2)
+        
+        # Direction vectors of the lines
+        dir1 = a2 - a1
+        dir2 = b2 - b1
+
+        # Check if the lines are parallel
+        cross_prod = np.cross(dir1, dir2)
+        if np.isclose(cross_prod, 0):  # Lines are parallel
+            # Check if the lines are coincident (i.e., Q1 lies on Line 1)
+            cross_prod_coincident = np.cross(a2 - a1, b1 - a1)
+            if np.isclose(cross_prod_coincident, 0):
+                # Check if the segments overlap
+                t0 = np.dot(b1 - a1, dir1) / np.dot(dir1, dir1)
+                t1 = np.dot(b2 - a1, dir1) / np.dot(dir1, dir1)
+                t_min = min(t0, t1)
+                t_max = max(t0, t1)
+                if t_max >= 0 and t_min <= 1:
+                    # check none of the points are shared
+                    if not ((a1 == b1).all() or (a1 == b2).all() or (a2 == b1).all() or (a2 == b2).all()): 
+                        return True  # Segments overlap
+            return False  # Lines are parallel but not coincident or segments do not overlap
+
+        # Solve for t and s in the equation: P1 + t * dir1 = Q1 + s * dir2
+        A = np.vstack([dir1, -dir2]).T
+        b = b1 - a1
+
+        try:
+            t, s = np.linalg.solve(A, b)
+            # Check if t and s are within the segment bounds [0, 1]
+            if 0 <= t <= 1 and 0 <= s <= 1:
+                # check none of the points are shared
+                if not ((a1 == b1).all() or (a1 == b2).all() or (a2 == b1).all() or (a2 == b2).all()): 
+                    return True  # Segments intersect
+            else:
+                return False  # Intersection is outside the segments
+        except np.linalg.LinAlgError:
+            # No solution exists (lines do not intersect)
+            return False
     
     
 class PerlinNoise:

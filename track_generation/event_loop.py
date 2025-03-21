@@ -7,6 +7,7 @@ from track_gen.alternative_track import Track as control_point_track
 from track_gen.bezier import Bezier
 
 from track_gen.tracks import convex_hull_track
+from track_gen.generators import convex_hull_generator
 
 import pygame
 import numpy as np
@@ -78,15 +79,13 @@ class EventLoop():
         
         # start rendering
         
-        # create a new track
-        convex_hull = convex_hull_track.ConvexHullTrack(10)
+        # create a new track generator
+        track_generator = convex_hull_generator.ConvexHullGenerator()
         
-        convex_hull.encode_control_point(
-            0, 90.1, 82.1, 1.044, 1.042, 1035.2, 913.1, 48331.2
-        )        
+        # generate many seeds until exception
         
-        print(convex_hull.get_genotype())
-        
+        #for i in range(0, 1000):
+        self.test_track = track_generator.generate_track(908372, self.config["concave_hull"])
         
         self.render()
         
@@ -103,20 +102,21 @@ class EventLoop():
             self.screen.fill((0,0,0))
             
             if self.render_track:
+                self.test_track.render(self.screen)
                 
                 # render track onto screen
                 # blit the screen onto the surface
                 # save
                 
-                self.tracks[track_index].render(self.screen)
-                pygame.image.save(self.screen, Path(f"{self.config['TRACK_IMG_FOLDER']}/{self.tracks[track_index].seed}.png"))
+                #self.tracks[track_index].render(self.screen)
+                #pygame.image.save(self.screen, Path(f"{self.config['TRACK_IMG_FOLDER']}/{self.tracks[track_index].seed}.png"))
                 
-                track_index += 1 
-                if track_index >= self._num_tracks:
-                    self.running = False            
+                #track_index += 1 
+                #if track_index >= self._num_tracks:
+                #    self.running = False            
                                     
-            if self.render_bezier:
-               self.bezier.render_bezier(self.bezier_coords, self.screen)
+            #if self.render_bezier:
+            #   self.bezier.render_bezier(self.bezier_coords, self.screen)
              
             # to here
             pygame.display.flip()
