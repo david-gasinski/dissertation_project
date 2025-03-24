@@ -172,5 +172,5 @@ cython_debug/
 
 # track images
 tracks/*.png
-track_generation/tracks
+track_gen/tracks
 png
