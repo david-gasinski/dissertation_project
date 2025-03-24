@@ -85,7 +85,7 @@ class EventLoop():
         # generate many seeds until exception
         
         #for i in range(0, 1000):
-        self.test_track = track_generator.generate_track(908372, self.config["concave_hull"])
+        self.test_track = track_generator.generate_track(12319, self.config["concave_hull"])
         
         self.render()
         

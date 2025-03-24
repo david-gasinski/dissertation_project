@@ -95,4 +95,4 @@ class Track():
         """
             Used for rendering, converts to screen coordinates
         """
-        return coords + 600
+        return coords + 450

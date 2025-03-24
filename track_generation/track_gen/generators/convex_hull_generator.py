@@ -76,8 +76,7 @@ class ConvexHullGenerator(abstract_track_generator.TrackGenerator):
             hull_points = points[concave_idx]            
 
         # for each point, calculate its slope towards the origin
-        slopes = utils.LinearAlgebra.calculate_slopes(hull_points)
-        
+        slopes = utils.LinearAlgebra.calculate_slopes(hull_points)    
     
         # calculate the perpendicular slope and its gradient
         perp_slopes = utils.LinearAlgebra.calculate_slope_tangent(slopes)
@@ -91,13 +90,8 @@ class ConvexHullGenerator(abstract_track_generator.TrackGenerator):
         
         c1 = np.ndarray(shape=(_num_points, 2))
         c2 = np.ndarray(shape=(_num_points, 2))
-        
-        
-        # generate two pairs on indexes for straights
-        
+           
         # another constraint, control points MUST NOT overlap
-        
-        
         for point in range(len(hull_points - 1)):
             current_point = hull_points[point]
             
@@ -110,7 +104,15 @@ class ConvexHullGenerator(abstract_track_generator.TrackGenerator):
 
             # get the second control point, 
             c2[point] = control_points[1]
-                   
+        
+        
+        #for i in range(config['straights']):
+        #    index = rng.integers(0, 10, size=1)
+        #    index_pair = utils.clamp(index + 1, 0, 10)
+        #    
+        #    c2[index] = [0,0]
+        #    c1[index_pair] = [0,0]
+        
         # encode the points
         track.encode_control_points(
             hull_points[:, 0, np.newaxis], hull_points[:, 1, np.newaxis], 

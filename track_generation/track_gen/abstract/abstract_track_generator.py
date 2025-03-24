@@ -14,6 +14,4 @@ class TrackGenerator():
             seed: int
                 A integer from 0 to 43918403
         """
-        pass
-    
-# generate track -> return Track object as genotype
+        pass    
