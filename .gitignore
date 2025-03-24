@@ -169,3 +169,8 @@ cython_debug/
 
 # PyPI configuration file
 .pypirc
+
+# track images
+tracks/*.png
+track_gen/tracks
+png

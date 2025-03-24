@@ -31,7 +31,7 @@ class GeneticAlgorithm():
             seed = self.seed_generator.integers(low=0, high=43918403, size=1)
 
             self.population.append(generator.generate_track(seed))
-            self.fitness[track, 0] = track # store index 
+            self.fitness[track, 0] = track # store index, seed 
             
     def calculate_fitness(self) -> None:
         for track in range(self.population_size):

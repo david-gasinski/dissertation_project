@@ -17,7 +17,12 @@ class LinearAlgebra:
     @staticmethod
     def linear_eq(slope: float, b_x: float, y_intercept: float, i_min: float, i_max: float, i: float) -> float:
         t = np.linspace(i_min, i_max, i)
-        if (slope > 0.8):
+        
+        # if the slope is less than 1 it will cause the control points 
+        # to be (x / slope) times distance apart. if lim slope -> 0 then,
+        # lim (x / slope) -> inf
+        # if slope > 1, normalise t to slope   
+        if (np.abs(slope) > 1):
             t =  (t / slope) + b_x
         else:
             t += b_x
@@ -111,6 +116,12 @@ class LinearAlgebra:
         p2 = np.asarray(p2)            
         
         return np.linalg.norm(p1 - p2)
+
+    def manhanttan_distance(p1: Union[list[float], np.ndarray], p2: Union[list[float], np.ndarray]) -> float:
+        p1 = np.asarray(p1)
+        p2 = np.asarray(p2)
+            
+        return np.absolute((p1[0] - p2[0]) + (p1[1] - p2[1]))
     
     @staticmethod
     def get_intersect(a1: np.ndarray, a2: np.ndarray, b1: np.ndarray, b2: np.ndarray) -> Union[np.ndarray, None]:

@@ -2,35 +2,20 @@
     "WIDTH": 1000, 
     "HEIGHT": 1000,
     "TRACK_IMG_FOLDER": "tracks/",
-    "CONVEX" : {
-        "POINT_OFFSET": 30,
-        "NUM_OFFSET_POINTS": 15,
-        "MIN_OFFSET_MIDPOINT": 0.75,
-        "MAX_OFFSET_MIDPOINT" : 1,
-        "MIN_MIDPOINT_WEIGHTING": 0.3,
-        "MAX_MIDPOINT_WEIGHTING": 0.7,
-        "NUM_POINTS": 1000
-    },
-    "CONTROL_POINT" : {
-        "NUM_POINTS": 5,
-        "WIDTH": 800, 
-        "HEIGHT": 800
-    },
     "concave_hull": {
         "control_points" : 10,
         "x_bounds": {
-            "low" : -400,
-            "high" : 400    
+            "low" : -200,
+            "high" : 200    
         },
         "y_bounds": {
-            "low": -400,
-            "high":  400
+            "low": -200,
+            "high":  200
         },
-        "width": 800,
-        "height": 800,
-        "weight_point_offset" : 40,
-        "threshold_distance": 70,
-        "straights": 2
+        "width": 400,
+        "height": 400,
+        "weight_point_offset" : 20,
+        "threshold_distance":50
     }
 
 }
