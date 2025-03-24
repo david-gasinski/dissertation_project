@@ -35,7 +35,7 @@ class ConvexHullTrack(abstract_track.Track):
             colour_index += 1;
 
         num_coords = len(self.BEZIER_COORDINATES)
-        # render bezier
+
         for coordinate in range(num_coords):
             current_coord = self.BEZIER_COORDINATES[coordinate]
             next_coord = self.BEZIER_COORDINATES[utils.clamp(coordinate + 1, 0, num_coords)]
@@ -43,7 +43,6 @@ class ConvexHullTrack(abstract_track.Track):
             screen_coord_current = (self.convert_to_screen(current_coord[0]), self.convert_to_screen(current_coord[1]))            
             screen_coord_next = (self.convert_to_screen(next_coord[0]), self.convert_to_screen(next_coord[1]))
             
-            #pygame.draw.circle(screen, (0,255,0), screen_coord_current, 5)
             pygame.draw.line(screen, (0,255,0), screen_coord_current, screen_coord_next, 1)
             
     def calculate_bezier(self):
@@ -70,7 +69,7 @@ class ConvexHullTrack(abstract_track.Track):
             c2_y = _next[4] if _current_c1 < _current_c2 else _next[6]
             
             # before generating, check if control points are used by any previous curves
-            # this stops spade-like corners forming
+            # this stops point-like corners forming
             
             # if c1 used already, switch to other point
             if  [c1_x, c1_y] in reserved_control_points:
@@ -96,12 +95,6 @@ class ConvexHullTrack(abstract_track.Track):
             )
             
             self.BEZIER_COORDINATES.extend(bezier_coords) 
-        
-        # NOW do overlap test for the entire bezier
-        # if any, swap c1 again
-        #overlap = utils.LinearAlgebra.intersection_bezier_curve(self.BEZIER_COORDINATES)
-        #print(f"Bezier curve {point} and {point+1} overlaps: {overlap}")            
-          
 
     def fitness(self):
         return super().fitness()
