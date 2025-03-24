@@ -2,11 +2,6 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from pathlib import Path
-from track_gen.track import Track as convex_hull_track_old
-from track_gen.alternative_track import Track as control_point_track
-from track_gen.bezier import Bezier
-
-from track_gen.tracks import convex_hull_track
 from track_gen.generators import convex_hull_generator
 
 import pygame
@@ -48,12 +43,8 @@ class EventLoop():
             # render here        
             self.screen.fill((0,0,0))
             
-            # render track onto screen
-            # blit the screen onto the surface
-            # save
-            
             self.tracks[track_index].render(self.screen)
-            pygame.image.save(self.screen, Path(f"{self.config['TRACK_IMG_FOLDER']}/{track_index}.png"))
+            pygame.image.save(self.screen, Path(f"{self.config['TRACK_IMG_FOLDER']}/{self.tracks[track_index].seed}.png"))
             
             track_index += 1 
             if track_index >= self._num_tracks:

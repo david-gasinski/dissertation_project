@@ -15,7 +15,7 @@ class ConvexHullGenerator(abstract_track_generator.TrackGenerator):
         _num_points = config["control_points"]
         
         # initialise a track object
-        track = convex_hull_track.ConvexHullTrack(_num_points)
+        track = convex_hull_track.ConvexHullTrack(_num_points, seed)
 
         # init the rng generator
         rng = np.random.default_rng(seed=seed)
@@ -34,6 +34,9 @@ class ConvexHullGenerator(abstract_track_generator.TrackGenerator):
         # if too close, generate new coorindate
         threshold_distance = config['threshold_distance']
         
+        # for every point
+        # calculate all closests points
+        # if any < threshold then generate new point
         for point in range(points.shape[0]):
             for point_next in range(points.shape[0]):
                 
@@ -82,7 +85,7 @@ class ConvexHullGenerator(abstract_track_generator.TrackGenerator):
         perp_slopes = utils.LinearAlgebra.calculate_slope_tangent(slopes)
         
         # apply some random additions / subractions to the slope, breaks up the shape
-        offsets = rng.uniform(-0.1, 0.1, (10))
+        offsets = rng.uniform(-0.1, 0.1, (_num_points))
         perp_slopes = perp_slopes + offsets    
                 
         # calculate the y intercepts
@@ -105,13 +108,6 @@ class ConvexHullGenerator(abstract_track_generator.TrackGenerator):
             # get the second control point, 
             c2[point] = control_points[1]
         
-        
-        #for i in range(config['straights']):
-        #    index = rng.integers(0, 10, size=1)
-        #    index_pair = utils.clamp(index + 1, 0, 10)
-        #    
-        #    c2[index] = [0,0]
-        #    c1[index_pair] = [0,0]
         
         # encode the points
         track.encode_control_points(

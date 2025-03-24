@@ -5,17 +5,17 @@
     "concave_hull": {
         "control_points" : 10,
         "x_bounds": {
-            "low" : -400,
-            "high" : 400    
+            "low" : -200,
+            "high" : 200    
         },
         "y_bounds": {
-            "low": -400,
-            "high":  400
+            "low": -200,
+            "high":  200
         },
-        "width": 800,
-        "height": 800,
-        "weight_point_offset" : 40,
-        "threshold_distance": 70
+        "width": 400,
+        "height": 400,
+        "weight_point_offset" : 20,
+        "threshold_distance":50
     }
 
 }

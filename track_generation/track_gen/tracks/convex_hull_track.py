@@ -13,9 +13,9 @@ class ConvexHullTrack(abstract_track.Track):
 
     CONTROL_POINTS = None
     
-    def __init__(self, control_points: int) -> None:
+    def __init__(self, control_points: int, seed: int) -> None:
         # init bezier class
-        super().__init__(control_points)
+        super().__init__(control_points, seed)
                 
     def render(self, screen):
         colour_index = 0
@@ -56,7 +56,7 @@ class ConvexHullTrack(abstract_track.Track):
             _current = control_points[point]
             _next = control_points[utils.clamp(point + 1, 0, self._control_points)]
                                 
-            # calculate the distances and the weightings
+            # calculate the distances and the weightings            
             _current_c1 = utils.LinearAlgebra.euclidean_distance([_current[0], _current[1]], [_next[3], _next[4]]) 
             _current_c2 = utils.LinearAlgebra.euclidean_distance([_current[0], _current[1]], [_next[5], _next[6]]) 
             _next_c1 = utils.LinearAlgebra.euclidean_distance([_next[0], _next[1]], [_current[3], _current[4]]) 
@@ -72,7 +72,7 @@ class ConvexHullTrack(abstract_track.Track):
             # this stops point-like corners forming
             
             # if c1 used already, switch to other point
-            if  [c1_x, c1_y] in reserved_control_points:
+            if [c1_x, c1_y] in reserved_control_points:
                 c1_x = _current[3] if not _next_c1 <_next_c2 else _current[5]
                 c1_y = _current[4] if not _next_c1 < _next_c2 else _current[6]
             # if c2 used, switch to other point as well
@@ -93,6 +93,8 @@ class ConvexHullTrack(abstract_track.Track):
                 weights_x,
                 weights_y
             )
+            
+            
             
             self.BEZIER_COORDINATES.extend(bezier_coords) 
 

@@ -10,7 +10,7 @@ class Track():
     CONTROL_POINTS = None
     BEZIER_COORDINATES = None # calculate
     
-    def __init__(self, control_points: int) -> None:
+    def __init__(self, control_points: int, seed: int) -> None:
         """
             Initialise the control point numpy array 
         
@@ -20,6 +20,7 @@ class Track():
 
         """
         self._control_points = control_points
+        self.seed = seed
         self.CONTROL_POINTS = np.ndarray(shape=(control_points, 7), dtype=np.float32)
     
     def encode_control_point(self, index: int, x: float, y: float, slope: float, x_c1: float, y_c1: float, x_c2: float, y_c2: float) -> None:
