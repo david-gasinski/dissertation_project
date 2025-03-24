@@ -13,9 +13,9 @@ class ConvexHullTrack(abstract_track.Track):
 
     CONTROL_POINTS = None
     
-    def __init__(self, control_points: int) -> None:
+    def __init__(self, control_points: int, seed: int) -> None:
         # init bezier class
-        super().__init__(control_points)
+        super().__init__(control_points, seed)
                 
     def render(self, screen):
         colour_index = 0

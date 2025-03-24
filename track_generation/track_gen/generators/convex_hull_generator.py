@@ -15,7 +15,7 @@ class ConvexHullGenerator(abstract_track_generator.TrackGenerator):
         _num_points = config["control_points"]
         
         # initialise a track object
-        track = convex_hull_track.ConvexHullTrack(_num_points)
+        track = convex_hull_track.ConvexHullTrack(_num_points, seed)
 
         # init the rng generator
         rng = np.random.default_rng(seed=seed)

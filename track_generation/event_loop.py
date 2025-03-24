@@ -53,7 +53,7 @@ class EventLoop():
             # save
             
             self.tracks[track_index].render(self.screen)
-            pygame.image.save(self.screen, Path(f"{self.config['TRACK_IMG_FOLDER']}/{track_index}.png"))
+            pygame.image.save(self.screen, Path(f"{self.config['TRACK_IMG_FOLDER']}/{self.tracks[track_index].seed}.png"))
             
             track_index += 1 
             if track_index >= self._num_tracks:

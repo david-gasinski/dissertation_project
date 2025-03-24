@@ -17,7 +17,7 @@ class LinearAlgebra:
     @staticmethod
     def linear_eq(slope: float, b_x: float, y_intercept: float, i_min: float, i_max: float, i: float) -> float:
         t = np.linspace(i_min, i_max, i)
-        if (slope > 0.8):
+        if (abs(slope) > 0.8):
             t =  (t / slope) + b_x
         else:
             t += b_x
