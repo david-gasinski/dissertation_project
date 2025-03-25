@@ -2,7 +2,8 @@ import numpy as np
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from track_gen.abstract import abstract_track_generator    
+    from track_gen.abstract import abstract_track_generator 
+    from track_gen.abstract import abstract_track
 
 
 
@@ -21,7 +22,7 @@ class GeneticAlgorithm():
         # python list to store the track object
         # numpy array used for fitness calculations, storing index of tracks
         self.population = []
-        self.fitness = np.ndarray(shape=(population_size, 2))
+        self.fitness = np.ndarray(shape=(population_size, 3))
         
         self.seed_generator = np.random.default_rng()
 
@@ -31,14 +32,21 @@ class GeneticAlgorithm():
             seed = self.seed_generator.integers(low=0, high=43918403, size=1)
 
             self.population.append(generator.generate_track(seed))
-            self.fitness[track, 0] = track # store index, seed 
+            
+            # store index, seed 
+            self.fitness[track, 0] = track 
+            self.fitness[track, 1] = seed
             
     def calculate_fitness(self) -> None:
         for track in range(self.population_size):
             
             # calculate the fitness of the population
             fitness = self.population[track].fitness()
-            self.fitness[track, 1] = fitness
+            self.fitness[track, 2] = fitness
+
+    def start_generations(self) -> list[abstract_track.Track]:
+        return
+
 
     def crossover(self) -> None:
         return   

@@ -45,12 +45,12 @@ class ConvexHullTrack(abstract_track.Track):
             
             pygame.draw.line(screen, (0,255,0), screen_coord_current, screen_coord_next, 1)
             
-    def calculate_bezier(self):
+    def calculate_bezier(self, config: dict):
         control_points = self.get_genotype()
         reserved_control_points = []
         self.BEZIER_COORDINATES = []
         
-        _bezier = bezier.Bezier(1, 0.001)
+        _bezier = bezier.Bezier(1, config['bezier_interval'])
         
         for point in range(self._control_points):
             _current = control_points[point]
@@ -94,16 +94,8 @@ class ConvexHullTrack(abstract_track.Track):
                 weights_y
             )
             
-            
-            
             self.BEZIER_COORDINATES.extend(bezier_coords) 
 
-    def fitness(self):
-        return super().fitness()
-    
-    def mutate(self, mutation_points = 1):
-        return super().mutate(mutation_points)
-    
     def get_genotype(self):
         return super().get_genotype()
     
