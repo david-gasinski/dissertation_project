@@ -15,8 +15,8 @@ class Bezier:
         [1,5,10,10,5,1],    
        [1,6,15,20,15,6,1]] 
     
-    CUBIC = 1
-    QUADRATIC = 0
+    CUBIC = 3
+    QUADRATIC = 2
 
     def __init__(self, id: int, interval: float = 0.01) -> None:
         self.id = id
@@ -50,6 +50,49 @@ class Bezier:
         mt = 1-t
         return ((w[0] * mt**2) + (w[1]*2*mt*t) + (w[2] * t**2)) 
     
+    
+    def _calculate_derivative_weights(w: list[float], second_derivative: bool = False) -> list[float]:
+        """
+        Calculates the new weights for first and second derivatives of cubic bezier curves
+
+        Args:
+            w (list[float]): 4 weights used for cubic beziers
+
+        Returns:
+            list[float]: new list of weights, length 3 if second == False else 2
+        """
+        if second_derivative:
+            return [
+                2 * (w[1] - w[0]),
+                2 * (w[2] - [1]),
+            ]
+        elif not second_derivative:
+            return [
+                3 * (w[1] - w[0]),
+                3 * (w[2] - [1]),
+                3 * (w[3] - w[2])
+            ]
+    
+    def first_derivative_cubic(self, t: float, w: list[float]) -> float:
+        w = self._calculate_derivative_weights(w)
+        return self._quadratic_bezier(t, w)
+    
+    def second_derivative_cubic(self, t: float, w: list[float]) -> float:
+        w = self._calculate_derivative_weights(w, second_derivative=True)
+        return self._n_bezier_(1, t, w)
+    
+    def get_cubic_derivative(self, wx: list[float], wy: list[float], t: float, second_derivative: bool = False) -> list[float]:
+        if not second_derivative:
+            return [
+                self.first_derivative_cubic(t, wx),
+                self.first_derivative_cubic(t, wy)
+            ]
+        elif second_derivative:
+            return [
+                self.second_derivative_cubic(t, wx),
+                self.second_derivative_cubic(t, wy)
+            ]
+        
                  
     def _n_bezier(self, curve_type: int, wx: list[float], wy: list[float], t: float) -> list[float]:
         if curve_type == self.CUBIC:
