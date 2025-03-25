@@ -20,15 +20,14 @@ class EventLoop():
         self.running = True
                     
         self.tracks = []
-        self._num_tracks = 100
+        self._num_tracks = 2
         self._rng = np.random.default_rng()
         
         track_generator = convex_hull_generator.ConvexHullGenerator()
         
         for i in range(self._num_tracks):
             seed = self._rng.integers(0, 43918403, size=1)
-            self.tracks.append(track_generator.generate_track(seed, self.config["concave_hull"]))
-                    
+            self.tracks.append(track_generator.generate_track(i, self.config["concave_hull"]))
         self.render()
         
     def render(self):

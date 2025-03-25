@@ -69,17 +69,6 @@ class Track():
         """
         pass
     
-    def fitness(self) -> float:
-        """
-            Calculates the fitness of the track 
-        """
-        return
-    
-    def mutate(self, mutation_points: int = 1) -> None:
-        """
-            Randomly mutate a control point on the track
-        """
-        
     def get_genotype(self) -> np.ndarray:    
         """
             Returns an encoded form of the genotype       

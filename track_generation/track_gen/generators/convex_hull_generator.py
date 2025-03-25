@@ -4,7 +4,11 @@ from track_gen import utils
 from track_gen.tracks import convex_hull_track
 from typing import TYPE_CHECKING
 
-from concave_hull import concave_hull, concave_hull_indexes
+from concave_hull import concave_hull_indexes
+
+if TYPE_CHECKING:
+    from track_gen.abstract import abstract_track
+
 
 import numpy as np
 
@@ -117,7 +121,125 @@ class ConvexHullGenerator(abstract_track_generator.TrackGenerator):
             c2[:, 0, np.newaxis], c2[:, 1, np.newaxis]
         )
         
-        # calculate bezier
-        track.calculate_bezier()
+        
+        track = self.mutate(track, config)
     
+        # calculate bezier
+        track.calculate_bezier(config)
         return track
+    
+    def calculate_genome(self, x: float, y: float, seed: int, config: dict) -> np.ndarray:
+        rng = np.random.default_rng(seed=seed)
+        
+        point = np.asarray([[x,y]])
+        slopes = utils.LinearAlgebra.calculate_slopes(point)    
+    
+        # calculate the perpendicular slope and its gradient
+        perp_slopes = utils.LinearAlgebra.calculate_slope_tangent(slopes)
+        
+        # apply some random additions / subractions to the slope, breaks up the shape
+        offsets = rng.uniform(-0.1, 0.1, (1))
+        perp_slopes = perp_slopes + offsets    
+                
+        # calculate the y intercepts
+        y_intercepts = utils.LinearAlgebra.get_y_intercept(perp_slopes, point[:, 1], point[:, 0])
+         
+        control_points = utils.LinearAlgebra.linear_eq(
+            perp_slopes[0], point[0][0], y_intercepts[0], -config["weight_point_offset"], config["weight_point_offset"], 2
+        )
+        
+        # get the first control point, 
+        c1 = control_points[0]
+        # get the second control point, 
+        c2 = control_points[1]
+
+        return np.asarray([
+            point[0][0], point[0][1], perp_slopes[0], c1[0], c1[1], c2[0], c2[1]
+        ])
+    
+    def mutate(self, track: abstract_track.Track, config: dict) -> abstract_track.Track:
+        """
+            Picks a random index and moves the control point within the 
+            bounds defined by the previous and next point, keeping the
+            shape uniform and not breaking it up
+        """
+            
+        rng = np.random.default_rng(seed=track.seed)
+        
+        curr_index = rng.integers(0, config["control_points"], size=1)
+        next_index = utils.clamp(curr_index + 1, 0, config["control_points"])
+        prev_index = utils.clamp(curr_index - 1, 0, config["control_points"])
+        
+        track_genotype = track.get_genotype()
+
+        x_range = track_genotype[next_index][0][0] >= track_genotype[prev_index][0][0]
+        x_bounds = [
+            track_genotype[prev_index][0][0] if x_range else track_genotype[next_index][0][0],
+            track_genotype[prev_index][0][0] if not x_range else track_genotype[next_index][0][0]    
+        ]
+        
+        y_range = track_genotype[next_index][0][1] >= track_genotype[prev_index][0][1]
+        y_bounds = [
+            track_genotype[prev_index][0][1] if y_range else track_genotype[next_index][0][1],
+            track_genotype[prev_index][0][1] if not y_range else track_genotype[next_index][0][1]    
+        ]
+
+        # generate coordinates 
+        x_coords = rng.uniform(x_bounds[0], x_bounds[1], 1)
+        y_coords = rng.uniform(y_bounds[0], y_bounds[1], 1)
+            
+        mutated_control_point = self.calculate_genome(x_coords[0], y_coords[0], track.seed, config)
+        track.encode_control_point(curr_index, *mutated_control_point)
+        return track
+         
+    def crossover(self, parents: list[abstract_track.Track]) -> list[abstract_track.Track]:
+        """
+            Performs crossover on pairs of parents 
+        """        
+        
+        offspring = []
+        _parents = len(parents)
+        
+        # edge condition where list of parents does not contain enough parents
+        if not _parents % 2 == 0:
+            return parents
+        
+        for i in range(0, _parents, 2):
+            # use the seed of the first parent
+            parent_one = parents[i]
+            parent_two = parents[i+1]
+           
+            rng = np.random.default_rng(seed=parent_one.seed)
+
+            crossover_point = rng.integers(0, parent_one._control_points, size=(1))
+            
+            parent_genotypes = [
+                parent_one.get_genotype().T,
+                parent_two.get_genotype().T   
+            ] # get the genotypes, transposed for easy crossover
+                     
+            offspring = [
+                abstract_track.Track(parent_one._control_points, parent_one.seed),
+                abstract_track.Track(parent_two._control_points, parent_two.seed)
+            ] # retain parent seeds
+            
+            offspring[0].encode_control_points(
+                
+            )
+    
+    def _crossover_np(crossover_point: int, a1: np.ndarray, a2: np.ndarray) -> np.ndarray:
+        """
+            A helper function which uses single point crossover to combine two numpy arrays 
+            at an index (crossover_point)
+        """
+        return
+            
+        
+            
+            
+            
+            
+            
+            
+
+        

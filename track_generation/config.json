@@ -4,6 +4,7 @@
     "TRACK_IMG_FOLDER": "tracks/",
     "concave_hull": {
         "control_points" : 10,
+        "bezier_interval": 0.1,
         "x_bounds": {
             "low" : -200,
             "high" : 200    
@@ -17,5 +18,4 @@
         "weight_point_offset" : 20,
         "threshold_distance":50
     }
-
 }
