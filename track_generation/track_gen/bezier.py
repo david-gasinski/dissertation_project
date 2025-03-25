@@ -15,13 +15,9 @@ class Bezier:
         [1,5,10,10,5,1],    
        [1,6,15,20,15,6,1]] 
     
-    LINE_THICKNESS = 1
     CUBIC = 1
     QUADRATIC = 0
-    
-    QUADRATIC_RATIOS = [1, 1, 1]
-    CUBIC_RATIOS = [ 1, 0.5,0.5,1 ]
-    
+
     def __init__(self, id: int, interval: float = 0.01) -> None:
         self.id = id
         self.interval = interval
@@ -48,14 +44,13 @@ class Bezier:
 
     def _cubic_bezier(self, t: float, w: list[float]) -> float:
         mt = 1-t
-        rational = (self.CUBIC_RATIOS[0] * mt**3) + (self.CUBIC_RATIOS[1] * 3 * mt** 2 * t) + (self.CUBIC_RATIOS[2] * 3 * mt*t**2) + (self.CUBIC_RATIOS[3] *t**3)
         return ((w[0] * mt**3) + (w[1] * 3 * mt** 2 * t) + (w[2] * 3 * mt*t**2) + (w[3] *t**3))
     
     def _quadratic_bezier(self, t: float, w: list[float]) -> float:
         mt = 1-t
-        rational = (self.QUADRATIC_RATIOS[0] * mt**2) + (self.QUADRATIC_RATIOS[1]*2*mt*t) + (self.QUADRATIC_RATIOS[2] * t**2)
         return ((w[0] * mt**2) + (w[1]*2*mt*t) + (w[2] * t**2)) 
-              
+    
+                 
     def _n_bezier(self, curve_type: int, wx: list[float], wy: list[float], t: float) -> list[float]:
         if curve_type == self.CUBIC:
             return [
@@ -81,16 +76,3 @@ class Bezier:
             t+= self.interval
         return curve_coordinates
     
-    def render_bezier(self, bezier_coords: list[tuple], screen: pygame.Surface) -> None:
-        num_coords = len(bezier_coords)
-        for i in range(0, num_coords):
-            current_point = i
-            next_point = i + 1
-            
-            # don't joint the last two points
-            if next_point > num_coords - 1:
-                continue   
-            
-            pygame.draw.line(screen, (0,255,0), bezier_coords[current_point], bezier_coords[next_point], self.LINE_THICKNESS)
-            
-            
