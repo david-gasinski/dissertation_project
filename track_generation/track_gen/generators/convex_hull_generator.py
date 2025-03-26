@@ -217,24 +217,35 @@ class ConvexHullGenerator(abstract_track_generator.TrackGenerator):
                 parent_one.get_genotype().T,
                 parent_two.get_genotype().T   
             ] # get the genotypes, transposed for easy crossover
-                     
-            offspring = [
+            
+            # perform the crossover
+            # _offspring represents the raw control point data, while offsping holds the
+            # track objects
+            _offspring = self._crossover_np(
+                crossover_point, parent_genotypes[0], parent_genotypes[1]
+            )         
+            
+            offspring = [ 
                 abstract_track.Track(parent_one._control_points, parent_one.seed),
                 abstract_track.Track(parent_two._control_points, parent_two.seed)
-            ] # retain parent seeds
+            ] 
             
-            offspring[0].encode_control_points(
-                
-            )
-    
-    def _crossover_np(crossover_point: int, a1: np.ndarray, a2: np.ndarray) -> np.ndarray:
+            # encode control points for each offsping
+            offspring[0].encode_control_points(_offspring[0][0, :], _offspring[0][1, :], _offspring[0][2, :], _offspring[0][3, :], _offspring[0][4, :], _offspring[0][5, :], _offspring[0][6, :])
+            offspring[1].encode_control_points(_offspring[1][0, :], _offspring[1][1, :], _offspring[1][2, :], _offspring[1][3, :], _offspring[1][4, :], _offspring[1][5, :], _offspring[1][6, :])
+            
+            # return the offsping
+            return offspring
+            
+    def _crossover_np(self, crossover_point: int, a1: np.ndarray, a2: np.ndarray) -> tuple: 
         """
             A helper function which uses single point crossover to combine two numpy arrays 
             at an index (crossover_point)
         """
-        return
-            
+        a1 = np.hstack((a1[:, crossover_point:], a2[:, :crossover_point]))
+        a2 = np.hstack((a2[:, crossover_point:], a1[:, :crossover_point]))
         
+        return (a1,a2)
             
             
             
