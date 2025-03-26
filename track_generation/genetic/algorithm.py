@@ -76,7 +76,7 @@ class GeneticAlgorithm():
 
         # list from 0 to generations
         selection = self.seed_generator.shuffle(
-            
+            np.linspace()
         )
 
         selection =  np.random.sample(low=0, high=self.generations, size=(tournaments , 2))
