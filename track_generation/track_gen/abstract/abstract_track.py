@@ -22,6 +22,7 @@ class Track():
         """
         self._control_points = control_points
         self.seed = seed
+        self._fitness = 100 # default fitness
         self.CONTROL_POINTS = np.ndarray(shape=(control_points, 7), dtype=np.float32)
     
     def encode_control_point(self, index: int, x: float, y: float, slope: float, x_c1: float, y_c1: float, x_c2: float, y_c2: float) -> None:
@@ -96,3 +97,18 @@ class Track():
             Used for rendering, converts to screen coordinates
         """
         return coords + 450
+
+
+    def serialize(self) -> str:
+        """
+            Serializes track, including
+                self.CONTROL_POINTS 
+                self.seed
+                self.fitness    
+            to be saved in json file
+        """
+        return json.dumps({
+            "seed": self.seed,
+            "fitness" : self._fitness,
+            "genotype": self.CONTROL_POINTS.tolist()
+        })
