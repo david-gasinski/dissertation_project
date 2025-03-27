@@ -15,6 +15,7 @@ class ConvexHullTrack(abstract_track.Track):
     
     def __init__(self, control_points: int, seed: int) -> None:
         # init bezier class
+        self._fitness = 100
         super().__init__(control_points, seed)
                 
     def render(self, screen):
@@ -96,6 +97,10 @@ class ConvexHullTrack(abstract_track.Track):
             
             self.BEZIER_COORDINATES.extend(bezier_coords) 
 
+    def fitness(self):
+        self._fitness = 100 - (5 * utils.LinearAlgebra.intersection_bezier_curve(self.BEZIER_COORDINATES))
+        return self._fitness
+            
     def get_genotype(self):
         return super().get_genotype()
     

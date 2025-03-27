@@ -1,5 +1,6 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
+import json
 
 import numpy as np
 if TYPE_CHECKING:
@@ -54,7 +55,7 @@ class Track():
                 x_c2: float
                 y_c2: float 
         """
-        self.CONTROL_POINTS = np.hstack([x, y, slope, x_c1, y_c1, x_c2, y_c2])
+        self.CONTROL_POINTS = np.hstack((x, y, slope, x_c1, y_c1, x_c2, y_c2))
         
     def render(self, screen: pygame.Surface) -> None:
         """
@@ -75,11 +76,20 @@ class Track():
         """
         return self.CONTROL_POINTS
 
-    def calculate_bezier(self):
+    def calculate_bezier(self, config: dict):
         """
             Using the genotype, calculates the bezier curves
         """
         return
+    
+    def fitness(self) -> float:
+        """
+            Calculates the fitness based on the following heuristics
+            
+            Starting fitness = 100
+                - -5 per intersection on track
+        """
+        return 
 
     def convert_to_screen(self, coords):
         """

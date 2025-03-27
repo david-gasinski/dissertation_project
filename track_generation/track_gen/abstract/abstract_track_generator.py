@@ -7,7 +7,7 @@ if TYPE_CHECKING:
 
 class TrackGenerator():
 
-    def generate_track(self, seed: int) -> abstract_track.Track:
+    def generate_track(self, seed: int, config: dict) -> abstract_track.Track:
         """
         A method that given a seed, generates a track.
         
@@ -34,11 +34,12 @@ class TrackGenerator():
     
     def mutate(self, track: abstract_track.Track, config: dict) -> abstract_track.Track:
         """
-            Picks a random control point and mutates it
+            Picks a random index and moves the control point within the 
+            bounds defined by the previous and next point, keeping the
+            shape uniform and not breaking it up
         """
-        return
     
-    def crossover(self, t1: abstract_track.Track, t2: abstract_track.Track) -> abstract_track.Track:
+    def crossover(self, parents: list[abstract_track.Track]) -> list[abstract_track.Track]:
         """
-            Performs 
-        """
+            Performs crossover on pairs of parents 
+        """   
