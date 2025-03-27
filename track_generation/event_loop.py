@@ -32,7 +32,7 @@ class EventLoop():
         #    self.tracks.append(track_generator.generate_track(i, self.config["concave_hull"]))
         
         # create new algorithm class
-        self.genetic_alg = GeneticAlgorithm(track_generator, self.config["concave_hull"], 2, 0.05, self._num_tracks, 30)
+        self.genetic_alg = GeneticAlgorithm(track_generator, self.config["concave_hull"], 2, 0.1, self._num_tracks, 20)
         self.tracks = self.genetic_alg.start_generations()
         
         self.render()
