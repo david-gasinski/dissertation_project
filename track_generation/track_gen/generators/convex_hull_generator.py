@@ -120,10 +120,7 @@ class ConvexHullGenerator(abstract_track_generator.TrackGenerator):
             c1[:, 0, np.newaxis], c1[:, 1, np.newaxis], 
             c2[:, 0, np.newaxis], c2[:, 1, np.newaxis]
         )
-        
-        
-        track = self.mutate(track, config)
-    
+            
         # calculate bezier
         track.calculate_bezier(config)
         return track
@@ -190,9 +187,13 @@ class ConvexHullGenerator(abstract_track_generator.TrackGenerator):
             
         mutated_control_point = self.calculate_genome(x_coords[0], y_coords[0], track.seed, config)
         track.encode_control_point(curr_index, *mutated_control_point)
+        
+        # calculate bezier
+        track.calculate_bezier(config)
+        
         return track
          
-    def crossover(self, parents: list[abstract_track.Track]) -> list[abstract_track.Track]:
+    def crossover(self, parents: list[abstract_track.Track], config: dict) -> list[abstract_track.Track]:
         """
             Performs crossover on pairs of parents 
         """        
@@ -200,52 +201,99 @@ class ConvexHullGenerator(abstract_track_generator.TrackGenerator):
         offspring = []
         _parents = len(parents)
         
+        # instead of getting crossover point as an index arrary
+        # cross on a random line through origin
+        
+        
         # edge condition where list of parents does not contain enough parents
         if not _parents % 2 == 0:
             return parents
-        
+                
         for i in range(0, _parents, 2):
             # use the seed of the first parent
-            parent_one = parents[i]
-            parent_two = parents[i+1]
+            p1 = parents[i]
+            p2 = parents[i+1]
            
-            rng = np.random.default_rng(seed=parent_one.seed)
+            p1_geno = p1.get_genotype()
+            p2_geno = p2.get_genotype()
+                       
+            rng = np.random.default_rng(seed=p1.seed)
 
-            crossover_point = rng.integers(0, parent_one._control_points, size=(1))
+            # generate random angle
+            crossover_slope = np.sin(rng.integers(low=0, high=360, size=(1)))
             
-            parent_genotypes = [
-                parent_one.get_genotype().T,
-                parent_two.get_genotype().T   
-            ] # get the genotypes, transposed for easy crossover
+            # for every point in both genotypes
+            # get above and below the line
+            # only crossover above / below
+            _num_cp = p1._control_points
             
-            # perform the crossover
-            # _offspring represents the raw control point data, while offsping holds the
-            # track objects
-            _offspring = self._crossover_np(
-                crossover_point, parent_genotypes[0], parent_genotypes[1]
-            )         
+            # split parents into two arrays
+            pos_delta__p1 = []
+            pos_delta__p2 = []
             
-            offspring = [ 
-                abstract_track.Track(parent_one._control_points, parent_one.seed),
-                abstract_track.Track(parent_two._control_points, parent_two.seed)
-            ] 
+            for index in range(_num_cp):
+                # parent one
+                pgenotypes = [
+                    p1_geno[index],
+                    p2_geno[index]
+                ]
+                
+                p_ly = [
+                    utils.LinearAlgebra.line_eq(crossover_slope, pgenotypes[0][0]),
+                    utils.LinearAlgebra.line_eq(crossover_slope, pgenotypes[1][0])
+                ]
+                
+                pos_delta__p1.append(False if p_ly[0] > pgenotypes[0][1] else True)
+                pos_delta__p2.append(False if p_ly[1] > pgenotypes[1][1] else True)
+                    
+            pos_delta__p1 = np.asarray(pos_delta__p1)
+            pos_delta__p2 = np.asarray(pos_delta__p2)
             
-            # encode control points for each offsping
-            offspring[0].encode_control_points(_offspring[0][0, :], _offspring[0][1, :], _offspring[0][2, :], _offspring[0][3, :], _offspring[0][4, :], _offspring[0][5, :], _offspring[0][6, :])
-            offspring[1].encode_control_points(_offspring[1][0, :], _offspring[1][1, :], _offspring[1][2, :], _offspring[1][3, :], _offspring[1][4, :], _offspring[1][5, :], _offspring[1][6, :])
-            
-            # return the offsping
-            return offspring
+            p1_crossover = np.where((pos_delta__p1 == pos_delta__p2)[:, np.newaxis], p1_geno, p2_geno).T
+            p2_crossover = np.where((pos_delta__p1 == pos_delta__p2)[:, np.newaxis], p2_geno, p1_geno).T     
+
+            offspring.append(convex_hull_track.ConvexHullTrack(p1._control_points, p1.seed))
+            offspring.append(convex_hull_track.ConvexHullTrack(p2._control_points, p2.seed))
+                        
+            # encode control points
+            # attempted to unpack array using *
+            # unfortunately resultes in the wrong shape of
+            # (1, 10) instead of (10,1)
+            offspring[i].encode_control_points(
+                p1_crossover[0].T[:, np.newaxis],
+                p1_crossover[1].T[:, np.newaxis],
+                p1_crossover[2].T[:, np.newaxis],
+                p1_crossover[3].T[:, np.newaxis],
+                p1_crossover[4].T[:, np.newaxis],
+                p1_crossover[5].T[:, np.newaxis],
+                p1_crossover[6].T[:, np.newaxis]
+            )
+            offspring[i+1].encode_control_points(
+                p2_crossover[0].T[:, np.newaxis],
+                p2_crossover[1].T[:, np.newaxis],
+                p2_crossover[2].T[:, np.newaxis],
+                p2_crossover[3].T[:, np.newaxis],
+                p2_crossover[4].T[:, np.newaxis],
+                p2_crossover[5].T[:, np.newaxis],
+                p2_crossover[6].T[:, np.newaxis]
+            )
+                        
+            # calculate bezier for each
+            offspring[i].calculate_bezier(config)   
+            offspring[i+1].calculate_bezier(config)   
+        
+        return offspring
             
     def _crossover_np(self, crossover_point: int, a1: np.ndarray, a2: np.ndarray) -> tuple: 
         """
             A helper function which uses single point crossover to combine two numpy arrays 
             at an index (crossover_point)
-        """
-        a1 = np.hstack((a1[:, crossover_point:], a2[:, :crossover_point]))
-        a2 = np.hstack((a2[:, crossover_point:], a1[:, :crossover_point]))
+        """        
+        c1 = np.hstack((a1[:, crossover_point:], a2[:, :crossover_point]))
+        c2 = np.hstack((a2[:, crossover_point:], a1[:, :crossover_point]))
         
-        return (a1,a2)
+        return (c1,c2)
+
             
             
             

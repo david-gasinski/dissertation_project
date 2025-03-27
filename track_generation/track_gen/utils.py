@@ -30,7 +30,7 @@ class LinearAlgebra:
         return np.stack((t,y), axis=1)
 
     @staticmethod
-    def line_eq(slope: float, b_x: float, b_y: float, i_min: float, i_max: float, i: float) -> np.ndarray:
+    def deprecated_line_eq(slope: float, b_x: float, b_y: float, i_min: float, i_max: float, i: float) -> np.ndarray:
         """
             Over a given internal i across i_min, i_max
             return array of points on line with gradient slope and base b_x, b_y
@@ -42,12 +42,17 @@ class LinearAlgebra:
         
     @staticmethod
     def intersection_bezier_curve(points: Union[list[float], np.ndarray]) -> bool:
+        """
+            Calculates any intersections along points. Returns the amount of intersections
+        """
+        
         # for every 2 points in the curve
         # define a line
         # test its intersection against other line combination
         # O(n^2)
         # defo a better way of doing this        
         num_points = len(points)
+        intersections = 0
         
         for point in range(0, num_points):
             next_index = clamp(point + 1, 0, num_points)
@@ -73,28 +78,14 @@ class LinearAlgebra:
                 ) 
                 
                 if does_intersect:
-                    return True                
-        return False
+                    intersections += 1    
+                    
+        return intersections
   
     @staticmethod
-    def line_eq_np(slope: np.ndarray, b_x: np.ndarray, b_y: np.ndarray, i_min: float, i_max: float, i: float) -> np.ndarray:
-        """
-            Over a given internal i across i_min, i_max
-            return array of points on line with gradient slope and base b_x, b_y
-
-            identical operation to LinearAlgebra.line_eq but supporting multiple slopes
-        """
-        # broadcast to (i, 1)
-        t = np.linspace(i_min, i_max, i)[:, np.newaxis] 
-
-        # broadcast slope to (10,1), transpose t to (1, 200) and add y coords
-        y = slope[:, np.newaxis] * t.T + b_y[:, np.newaxis]
-        x = t.T + b_x[:, np.newaxis]
-        
-        # add new axis to transpose on 
-        x = x[:,:, np.newaxis]
-        y = y[:,:, np.newaxis]
-        return np.concatenate((x, y), axis=2)
+    def line_eq(slope: float, x: float, c: float = 0) -> float:
+        return (slope * x) + c
+    
         
     @staticmethod
     def get_y_intercept(slope: Union[float, np.ndarray], y: Union[float, np.ndarray], x: Union[float, np.ndarray]) -> float:
@@ -170,23 +161,6 @@ class LinearAlgebra:
         dir1 = a2 - a1
         dir2 = b2 - b1
 
-        # Check if the lines are parallel
-        cross_prod = np.cross(dir1, dir2)
-        if np.isclose(cross_prod, 0):  # Lines are parallel
-            # Check if the lines are coincident (i.e., Q1 lies on Line 1)
-            cross_prod_coincident = np.cross(a2 - a1, b1 - a1)
-            if np.isclose(cross_prod_coincident, 0):
-                # Check if the segments overlap
-                t0 = np.dot(b1 - a1, dir1) / np.dot(dir1, dir1)
-                t1 = np.dot(b2 - a1, dir1) / np.dot(dir1, dir1)
-                t_min = min(t0, t1)
-                t_max = max(t0, t1)
-                if t_max >= 0 and t_min <= 1:
-                    # check none of the points are shared
-                    if not ((a1 == b1).all() or (a1 == b2).all() or (a2 == b1).all() or (a2 == b2).all()): 
-                        return True  # Segments overlap
-            return False  # Lines are parallel but not coincident or segments do not overlap
-
         # Solve for t and s in the equation: P1 + t * dir1 = Q1 + s * dir2
         A = np.vstack([dir1, -dir2]).T
         b = b1 - a1
@@ -203,7 +177,6 @@ class LinearAlgebra:
         except np.linalg.LinAlgError:
             # No solution exists (lines do not intersect)
             return False
-    
     
 class PerlinNoise:
     
