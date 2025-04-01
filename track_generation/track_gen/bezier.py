@@ -1,7 +1,7 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
 
-import numpy
+import numpy as np
 
 import pygame
 
@@ -80,6 +80,32 @@ class Bezier:
     def second_derivative_cubic(self, t: float, w: list[float]) -> float:
         w = self._calculate_derivative_weights(w, second_derivative=True)
         return self._n_bezier_(1, t, w)
+    
+    def get_kappa(self, wx: list[float], wy: list[float], t: float):
+        """
+            Implementation based on the formula
+            https://pomax.github.io/bezierinfo/#curvature
+            
+        """
+                
+        d = self.get_cubic_derivative(wx, wy, t)
+        dd = self.get_cubic_derivative(wx, wy, t, second_derivative=True) 
+        
+        numerator = (d[0]*dd[1]) - (dd[0] * d[1])
+        denominator = pow((d[0]*d[0]) + (d[1]*d[1]), 3/2)
+            
+        kappa = numerator / denominator
+    
+        return kappa
+        
+    def get_bezier_curvature(self, wx: list[float], wy: list[float]):
+        curvature = []
+        
+        t = 0
+        while t <= 1:
+            curvature.append(self.get_kappa(wx, wy, t))
+            t += self.interval            
+        return curvature
     
     def get_cubic_derivative(self, wx: list[float], wy: list[float], t: float, second_derivative: bool = False) -> list[float]:
         if not second_derivative:
