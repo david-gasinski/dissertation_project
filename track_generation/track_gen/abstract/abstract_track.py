@@ -10,6 +10,7 @@ class Track():
     
     CONTROL_POINTS = None
     BEZIER_COORDINATES = None # calculate
+    CURVATURE_PROFILE = None #calculate
     
     def __init__(self, control_points: int, seed: int) -> None:
         """

@@ -50,6 +50,7 @@ class ConvexHullTrack(abstract_track.Track):
         control_points = self.get_genotype()
         reserved_control_points = []
         self.BEZIER_COORDINATES = []
+        self.CURVATURE_PROFILE  = []
         
         _bezier = bezier.Bezier(1, config['bezier_interval'])
         
@@ -95,7 +96,16 @@ class ConvexHullTrack(abstract_track.Track):
                 weights_y
             )
             
+            # using the weights, also calculate the curvature profile
+            _bezier_curvature = _bezier.get_bezier_curvature(
+                weights_x,
+                weights_y
+            )
+            
+            # append to arrays
+            self.CURVATURE_PROFILE.extend(_bezier_curvature)
             self.BEZIER_COORDINATES.extend(bezier_coords) 
+
 
     def fitness(self):
         self._fitness = 100 - (5 * utils.LinearAlgebra.intersection_bezier_curve(self.BEZIER_COORDINATES))
