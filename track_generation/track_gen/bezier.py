@@ -1,9 +1,7 @@
 from __future__ import annotations
-from typing import TYPE_CHECKING
 
 import numpy as np
-
-import pygame
+from track_gen import utils
 
 class Bezier:
     PASCAL = [
@@ -51,7 +49,22 @@ class Bezier:
         return ((w[0] * mt**2) + (w[1]*2*mt*t) + (w[2] * t**2)) 
     
     
-    def _calculate_derivative_weights(w: list[float], second_derivative: bool = False) -> list[float]:
+    def approx_arc_length(self, points: list[float]) -> None:
+        """
+            Returns an approximation of the arc length
+        """
+        distance = 0
+        num_points = len(points)
+
+        for point in range(num_points - 1):
+            p_current = points[point]
+            p_next = points[utils.clamp(point + 1, 0, num_points)]
+            
+            # get linear distance
+            distance += utils.LinearAlgebra.euclidean_distance(p_current, p_next)
+        return distance
+    
+    def _calculate_derivative_weights(self, w: list[float], second_derivative: bool = False) -> list[float]:
         """
         Calculates the new weights for first and second derivatives of cubic bezier curves
 
