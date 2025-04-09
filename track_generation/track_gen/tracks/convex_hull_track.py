@@ -12,6 +12,8 @@ import numpy as np
 class ConvexHullTrack(abstract_track.Track):
 
     CONTROL_POINTS = None
+    SEGMENTS = None
+    SEGMENT_CURVATURE = None # rad / m
     
     def __init__(self, control_points: int, seed: int) -> None:
         # init bezier class
@@ -19,22 +21,6 @@ class ConvexHullTrack(abstract_track.Track):
         super().__init__(control_points, seed)
                 
     def render(self, screen):
-        #colour_index = 0
-        #colours = [
-        #    (49,127,67), (100,107,99), (73,126,118), (106,95,49) ,(217,80,48), (236,124,38), (254,0,0), (47, 69, 56), (96, 111, 140), (245,208,51)
-        #    ]
-        #
-        #for control_point in self.CONTROL_POINTS:
-        #    c1 = (self.convert_to_screen(control_point[3]), self.convert_to_screen(control_point[4]))
-        #    c2 = (self.convert_to_screen(control_point[5]), self.convert_to_screen(control_point[6]))
-    
-        #    pygame.draw.circle(screen, colours[colour_index], c1, 3)
-        #    pygame.draw.circle(screen, colours[colour_index], c2, 3)
-        #
-        #    pygame.draw.line(screen, colours[colour_index], c1, c2, 1)
-        #
-        #    colour_index += 1;
-
         num_coords = len(self.BEZIER_COORDINATES)
 
         for coordinate in range(num_coords):
@@ -77,6 +63,7 @@ class ConvexHullTrack(abstract_track.Track):
             if [c1_x, c1_y] in reserved_control_points:
                 c1_x = _current[3] if not _next_c1 <_next_c2 else _current[5]
                 c1_y = _current[4] if not _next_c1 < _next_c2 else _current[6]
+                
             # if c2 used, switch to other point as well
             elif [c2_x, c2_y] in reserved_control_points:
                 c2_x = _next[3] if not _current_c1 < _current_c2 else _next[5]
@@ -104,7 +91,7 @@ class ConvexHullTrack(abstract_track.Track):
             
             # append to arrays
             self.CURVATURE_PROFILE.extend(_bezier_curvature)
-            self.BEZIER_COORDINATES.extend(bezier_coords) 
+            self.BEZIER_COORDINATES.extend(bezier_coords)  
 
 
     def fitness(self):

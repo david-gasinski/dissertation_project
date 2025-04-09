@@ -1,6 +1,9 @@
 from __future__ import annotations
 
 import numpy as np
+import scipy
+import scipy.datasets
+import scipy.spatial
 from track_gen import utils
 
 class Bezier:
@@ -47,9 +50,8 @@ class Bezier:
     def _quadratic_bezier(self, t: float, w: list[float]) -> float:
         mt = 1-t
         return ((w[0] * mt**2) + (w[1]*2*mt*t) + (w[2] * t**2)) 
-    
-    
-    def approx_arc_length(self, points: list[float]) -> None:
+
+    def arc_length(self, points: list[float]) -> None:
         """
             Returns an approximation of the arc length
         """
@@ -63,6 +65,62 @@ class Bezier:
             # get linear distance
             distance += utils.LinearAlgebra.euclidean_distance(p_current, p_next)
         return distance
+    
+    def generate_cubic_bezier_t(self, wx: list[float], wy: list[float], t: np.ndarray) -> list[float]:
+        mt = 1 - t
+        
+        bx = ((wx[0] * mt**3) + (wx[1] * 3 * mt** 2 * t) + (wx[2] * 3 * mt*t**2) + (wx[3] *t**3))
+        by = ((wy[0] * mt**3) + (wy[1] * 3 * mt** 2 * t) + (wy[2] * 3 * mt*t**2) + (wy[3] *t**3))
+        return np.hstack((bx, by)).tolist() # to list because i wrote everything without using numpy so cooked
+    
+    def fixed_distance_interval(self, wx: list[float], wy: list[float], distance: float) -> list[float]:
+        """
+            Returns t values of points along a parametric curve (defined by wx wy) at fixed distance intervals
+            Based on the theory described in https://pomax.github.io/bezierinfo/#tracing
+        """
+        
+        # firstly we need to calculate t interval
+        t_interval = 1 / distance
+        
+        # np.ndarray of points curve points
+        curve = np.asanyarray(self.generate_bezier(self.CUBIC, wx, wy, t_interval)) 
+        
+        # create a copy of the array but swap the first and last index
+        # this ensures, when doing distance calculations
+        # we calculate the distance from 0 -> 1, 1 -> 2, etc... (distance between successive points)
+        # rather than as pairs, or 0 -> 0
+        swap_curve = np.vstack((curve[1:, :],curve[0,:]))
+        
+        # calculate a distance matrix for curve and swap_curve
+        dist = np.diag(scipy.spatial.distance.cdist(
+            curve, swap_curve, 'euclidean'
+        ))[:-1] # remove last index as its the distance from 0 -> -1
+    
+        # get the cumulative sum of distances, x axis for interpolation
+        cum_dist = np.cumsum(dist)
+                
+        # associated t values used to generate the curve
+        t = np.linspace(0, 1, int(distance)) # y value for interpolation
+        
+        # generate an array of size distance with equal intervals 
+        # int() rounds down, so this works
+        # if int() rounds up, you would be extrapolating (not interpolating) each curve
+        interp_dist = np.linspace(0, int(distance), int(distance) + 1) 
+
+        # interpolate values of t based on interp_dist and cum_dist
+        # essentially, plot t vs cum_dist
+        # interpolate each value of interp_dist, find t
+        # this is the t value needed to generate a curvature profile
+        
+        return np.interp(interp_dist, cum_dist, t)
+
+    def approx_arc_length(self, wx: list[float], wy: list[float]) -> float:
+        """
+            Given wx and wy, approximate the length of a bezier curve by flattening the curve and adding up the length
+            of individual segments.
+        """
+        bezier_coords = self.generate_bezier(self.CUBIC, wx, wy, interval=0.1)
+        return self.arc_length(bezier_coords)
     
     def _calculate_derivative_weights(self, w: list[float], second_derivative: bool = False) -> list[float]:
         """
@@ -100,7 +158,7 @@ class Bezier:
             https://pomax.github.io/bezierinfo/#curvature
             
         """
-                
+        
         d = self.get_cubic_derivative(wx, wy, t)
         dd = self.get_cubic_derivative(wx, wy, t, second_derivative=True) 
         
@@ -111,15 +169,32 @@ class Bezier:
     
         return kappa
         
-    def get_bezier_curvature(self, wx: list[float], wy: list[float]):
+    def get_bezier_curvature(self, wx: list[float], wy: list[float], t_interval: float = None):
+        """
+            Returns the curvature of a bezier curve with weights (wx, wy) and 1 / t_interval points
+        """
         curvature = []
+        
+        interval = self.interval if not t_interval else t_interval
         
         t = 0
         while t <= 1:
             curvature.append(self.get_kappa(wx, wy, t))
-            t += self.interval            
+            t += interval            
         return curvature
     
+    def get_bezier_curvature_t(self, wx: list[float], wy: list[float], t: np.ndarray):
+        """
+            Returns the curvature of a bezier curve with weights (wx, wy) along t 
+        """
+        t_values = len(t)
+        curvature = np.ndarray(shape=t_values)
+                
+        for i in range(t_values):
+            curvature[i] = self.get_kappa(wx, wy, t[i])     
+            
+        return curvature.tolist()
+        
     def get_cubic_derivative(self, wx: list[float], wy: list[float], t: float, second_derivative: bool = False) -> list[float]:
         if not second_derivative:
             return [
@@ -149,12 +224,12 @@ class Bezier:
             self._n_bezier_(curve_type, t, wy)
         ]
               
-    def generate_bezier(self, curve_type: int,  wx: list[float], wy: list[float]) -> list[list[float]]:
+    def generate_bezier(self, curve_type: int,  wx: list[float], wy: list[float], interval: float = None) -> list[list[float]]:
         curve_coordinates = []
         t = 0
-        
+                
         while t <= 1:
             curve_coordinates.append(self._n_bezier(curve_type, wx, wy, t))
-            t+= self.interval
+            t+= self.interval if interval is None else interval
         return curve_coordinates
     

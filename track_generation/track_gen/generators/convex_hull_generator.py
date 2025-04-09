@@ -99,7 +99,7 @@ class ConvexHullGenerator(abstract_track_generator.TrackGenerator):
         c2 = np.ndarray(shape=(_num_points, 2))
            
         # another constraint, control points MUST NOT overlap
-        for point in range(len(hull_points - 1)):
+        for point in range(len(hull_points)):
             current_point = hull_points[point]
             
             control_points = utils.LinearAlgebra.linear_eq(
@@ -257,7 +257,7 @@ class ConvexHullGenerator(abstract_track_generator.TrackGenerator):
                         
             # encode control points
             # attempted to unpack array using *
-            # unfortunately resultes in the wrong shape of
+            # unfortunately results in the wrong shape of
             # (1, 10) instead of (10,1)
             offspring[i].encode_control_points(
                 p1_crossover[0].T[:, np.newaxis],
@@ -283,17 +283,6 @@ class ConvexHullGenerator(abstract_track_generator.TrackGenerator):
             offspring[i+1].calculate_bezier(config)   
         
         return offspring
-            
-    def _crossover_np(self, crossover_point: int, a1: np.ndarray, a2: np.ndarray) -> tuple: 
-        """
-            A helper function which uses single point crossover to combine two numpy arrays 
-            at an index (crossover_point)
-        """        
-        c1 = np.hstack((a1[:, crossover_point:], a2[:, :crossover_point]))
-        c2 = np.hstack((a2[:, crossover_point:], a1[:, :crossover_point]))
-        
-        return (c1,c2)
-
             
             
             

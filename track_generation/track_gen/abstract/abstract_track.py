@@ -9,8 +9,9 @@ if TYPE_CHECKING:
 class Track():
     
     CONTROL_POINTS = None
-    BEZIER_COORDINATES = None # calculate
-    CURVATURE_PROFILE = None #calculate
+    BEZIER_SEGMENTS = None # calculate
+    CURVATURE_PROFILE = None # calculate
+    LENGTH = None
     
     def __init__(self, control_points: int, seed: int) -> None:
         """
