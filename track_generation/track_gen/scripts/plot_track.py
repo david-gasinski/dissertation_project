@@ -1,12 +1,7 @@
-#
-# Generates a random track 
-# and plots its curvature profile
-#
-
 import matplotlib.pyplot as plt
 import numpy as np
 
-def plot_curvature(track) -> None:
+def plot_track(track) -> None:
     """
         Plots the curvature profile of the track as a function of t 
             where t = [0,1], defining the interval of the entire track
@@ -16,13 +11,15 @@ def plot_curvature(track) -> None:
     
     """
     # generate range of t values using len of self.CURVATURE_PROFILE
-    interval = np.linspace(0, 1, len(track.CURVATURE_PROFILE))
+
+    # convert bezier coords to numpy arrays
+    bezier_coords = np.asarray(track.BEZIER_COORDINATES)
     
     plt.plot(
-        interval, track.CURVATURE_PROFILE
+        bezier_coords[:, 0], bezier_coords[:, 1]
     )
-    plt.title("Track")
-    plt.ylabel("X")
-    plt.xlabel("Y")
+    plt.title("Curvature profile")
+    plt.ylabel("Curvature")
+    plt.xlabel("Track interval")
     plt.show()
  

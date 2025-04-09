@@ -15,7 +15,11 @@
         },
         "width": 400,
         "height": 400,
-        "weight_point_offset" : 20,
-        "threshold_distance":50
+        "control_point_offset" : 20,
+        "threshold_distance":50,
+        "slope_offset": {
+            "high": 0.1,
+            "low": -0.1
+        }
     }
 }
