@@ -1,5 +1,7 @@
 import numpy as np
 from typing import Union
+import codecs
+import json 
 
 def clamp(value: int, min: int, max: int):
     """
@@ -108,12 +110,26 @@ class LinearAlgebra:
         
         return np.linalg.norm(p1 - p2)
 
+    @staticmethod
     def manhanttan_distance(p1: Union[list[float], np.ndarray], p2: Union[list[float], np.ndarray]) -> float:
         p1 = np.asarray(p1)
         p2 = np.asarray(p2)
             
         return np.absolute((p1[0] - p2[0]) + (p1[1] - p2[1]))
     
+    @staticmethod
+    def offset_xy(offset_dist: float, flip_sign: bool = False) -> list[float]:
+        """
+            Converts a fixed distance offset into equal x and y offsets using the formulat
+            a^2 + b^2 = c^2 rearranged as
+            
+            b = sqrt(c^2 / 2)
+            
+            as this is used for a distance measure, flip_sign can be used to return a negative offset
+        """
+        _offset = np.sqrt(offset_dist / 2)
+        return _offset if not flip_sign else -_offset
+        
     @staticmethod
     def get_intersect(a1: np.ndarray, a2: np.ndarray, b1: np.ndarray, b2: np.ndarray) -> Union[np.ndarray, None]:
         """
@@ -177,6 +193,21 @@ class LinearAlgebra:
         except np.linalg.LinAlgError:
             # No solution exists (lines do not intersect)
             return False
+  
+  
+class PolynomialAlgebra:
+    
+    @staticmethod
+    def quadratic_formula(a: float, b: float, c: float) -> list[float]:
+        # dont return complex numbers
+        poly = np.polynomial.Polynomial([a, b, c])        
+
+        roots = poly.roots()
+        if (roots.dtype == np.complex128):
+            # roots are zero
+            roots = np.asanyarray([0.0,0.0])
+        return roots
+  
     
 class PerlinNoise:
     
@@ -244,8 +275,18 @@ class PerlinNoise:
     def linear_interp(a, b, x):
         return a + x * (b-a)
     
+    
 def convert_to_screen(coords: list[float]) -> list[float]:
     return [coords[0] + 400, coords[1] + 400]
 
 def convert_to_screen_scalar(coord: float) -> float:
     return coord + 400
+
+def read_np(path: str) -> None:
+    """
+        Open a file containg a serialized numpy array within
+        Load the numpy array and return 
+    """
+    obj_text = codecs.open(path, 'r', encoding='utf-8').read()
+    py_arr = json.loads(obj_text) # python arr
+    return np.array(py_arr)

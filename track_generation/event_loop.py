@@ -3,11 +3,13 @@ from typing import TYPE_CHECKING
 
 from pathlib import Path
 from track_gen.generators import convex_hull_generator
+from track_gen.generators import track_generator
 from genetic.algorithm import GeneticAlgorithm
 
 
 import pygame
 import numpy as np
+import matplotlib.pyplot as plt
 
 if TYPE_CHECKING:
     from .window import Window
@@ -25,19 +27,22 @@ class EventLoop():
         self._num_tracks = 100
         self._rng = np.random.default_rng()
         
-        track_generator = convex_hull_generator.ConvexHullGenerator()
-        
-        #for i in range(self._num_tracks):
-        #    seed = self._rng.integers(0, 43918403, size=1)
-        #    self.tracks.append(track_generator.generate_track(i, self.config["concave_hull"]))
-        
+        track_factory = track_generator.TrackGenerator(self.config['concave_hull'])
+                
         # create new algorithm class
-        self.genetic_alg = GeneticAlgorithm(track_generator, self.config["concave_hull"], 2, 0.1, self._num_tracks, 20)
+        self.genetic_alg = GeneticAlgorithm(track_factory, 2, 0.1, self._num_tracks, 3)
         self.tracks = self.genetic_alg.start_generations()
         
         self.render()
         
+        # generations
+        generations = np.linspace(1, 101, 100)
         
+        # plot
+        plt.plot(generations, self.genetic_alg.average_fitness)
+    
+        plt.show()    
+           
     def render(self):
         track_index = 0
         

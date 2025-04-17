@@ -3,6 +3,9 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 def plot_track_layout(track) -> None:
+    """
+        Old track generation method
+    """
     
     interval = np.linspace(0, 1, len(track.CURVATURE_PROFILE))
     bezier_coords = np.asarray(track.BEZIER_COORDINATES)
@@ -17,19 +20,18 @@ def plot_track_layout(track) -> None:
     plt.show()  
 
 def n_plot_track_layout(track) -> None:
+    """
+        New track generation method
+    """
+
     fig = plt.figure()
     
     sub_plots = fig.subplots(1,2, squeeze=False)
-    bezier_coords = np.asarray(track.BEZIER_COORDINATES)
         
-    # flatten
-    flat_curv = [x for xs in track.CURVATURE_PROFILE for x in xs]
-    
-    flat_curv = np.asanyarray(flat_curv)
-    interval = np.linspace(0, 1, len(flat_curv))
+    interval = np.linspace(0, int(track.LENGTH) + 1, int(track.LENGTH))
                 
-    sub_plots[0, 1].plot(interval, flat_curv) 
-    sub_plots[0, 0].plot(bezier_coords[:, 0], bezier_coords[:, 1])
+    sub_plots[0, 1].plot(interval, track.CURVATURE_PROFILE) 
+    sub_plots[0, 0].plot(track.TRACK_COORDS[:, 0], track.TRACK_COORDS[:, 1])
     
     fig.show() 
     plt.show()

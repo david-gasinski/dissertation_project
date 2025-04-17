@@ -1,25 +1,27 @@
 {
-    "WIDTH": 1000, 
+    "WIDTH": 1000,
     "HEIGHT": 1000,
     "TRACK_IMG_FOLDER": "tracks/",
     "concave_hull": {
-        "control_points" : 10,
+        "control_points": 10,
         "bezier_interval": 0.1,
         "x_bounds": {
-            "low" : -200,
-            "high" : 200    
+            "low": -200,
+            "high": 200
         },
         "y_bounds": {
             "low": -200,
-            "high":  200
+            "high": 200
         },
         "width": 400,
         "height": 400,
-        "control_point_offset" : 20,
-        "threshold_distance":50,
+        "control_point_offset": 20,
+        "threshold_distance": 50,
         "slope_offset": {
             "high": 0.1,
             "low": -0.1
-        }
+        },
+        "render": true,
+        "curvature_bin_dataset": "datasets\\scripts\\output\\data_bins\\curvature_bins.json"
     }
 }
