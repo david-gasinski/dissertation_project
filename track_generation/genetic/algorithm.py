@@ -6,10 +6,6 @@ from track_gen.abstract import abstract_track_generator
 from track_gen.abstract import abstract_track
 import timeit
 
-
-
-
-
 class GeneticAlgorithm():
     """
         Main class for genetic algorithm implementation.
@@ -17,14 +13,15 @@ class GeneticAlgorithm():
         This architecture allows the use of callback functions for analysing fitness.
     """
     
-    def __init__(self, generator: abstract_track_generator.TrackGenerator, config: dict, tournament_size_k: int, mutation_rate: float, population_size: int = 100, generations: int = 100) -> None:
+    def __init__(self, generator: abstract_track_generator.TrackGenerator, tournament_size_k: int, mutation_rate: float, population_size: int = 100, generations: int = 100) -> None:
         self.population_size = population_size
         self.generations = generations
         self.generator = generator
-        self.config = config
-
+        
         self.mutation_rate = mutation_rate
         self.tournament_size_k = tournament_size_k
+        
+        self.average_fitness = np.ndarray(shape=(generations))
 
         # for performane reasons, two arrays are used
         # python list to store the track object
@@ -39,7 +36,7 @@ class GeneticAlgorithm():
         for track in range(self.population_size):
             seed = self.seed_generator.integers(low=0, high=43918403, size=1)
 
-            self.population.append(self.generator.generate_track(seed, self.config))
+            self.population.append(self.generator.generate_track(seed))
                         
             # store index, seed 
             self.fitness[track, 0] = track 
@@ -49,7 +46,7 @@ class GeneticAlgorithm():
         for track in range(self.population_size):
             # calculate the fitness of the population
 
-            fitness = self.population[track].fitness()
+            fitness = self.generator.fitness(self.population[track])
             self.fitness[track, 2] = fitness
 
     def start_generations(self, cb: Callable = None, pass_config: bool = False) -> list[abstract_track.Track]:
@@ -69,28 +66,26 @@ class GeneticAlgorithm():
             if generations == 0: # first generation
                 self.initialise_population()
             
-            
-            # sort the array by fitness
+        
             self.fitness[:, 2].argsort()
                         
             # do tournament selection
             parents = self.tournament_selection(self.tournament_size_k)
             
             # generate the offspring
-            offspring = self.generator.crossover(parents, self.config)
+            offspring = self.generator.crossover(parents)
             
             # perform mutations based on mutation rate
             mutation_count = int(len(offspring) * self.mutation_rate)
             mutation_selection = np.linspace(0, mutation_count - 1 , mutation_count, dtype=np.int_)
             
             for mutate in mutation_selection:
-                individual = offspring[mutate]
-                offspring[mutate] = self.generator.mutate(individual, self.config)
+                self.generator.mutate(offspring[mutate])
                 
             # create a new population and slice to only get self.population_size 
             parents.extend(offspring)
             self.population = parents[:self.population_size]
-                
+                            
             # generate new a new array to keep track of fitness
             self.fitness = np.ndarray(shape=(self.population_size, 3))
             for track in range(self.population_size):
@@ -98,10 +93,13 @@ class GeneticAlgorithm():
                 self.fitness[track, 0] = track 
                 self.fitness[track, 1] = self.population[track].seed
             
-            # calculate new fitness     
+            # calculate and sort fitness
             self.calculate_fitness()
-            print(f"Generation {generations}. Average fitness is {np.average(self.fitness[:, 2])}. Time to run {timeit.default_timer() - start}")
             
+            # save fitness
+            self.average_fitness[generations] = np.average(self.fitness[:, 2])
+            
+            print(f"Generation {generations}. Average fitness is {self.average_fitness[generations]}. Time to run {timeit.default_timer() - start}")            
             generations += 1
         
         # as a final pass, calculate fitness and return population 
@@ -113,8 +111,6 @@ class GeneticAlgorithm():
         if not cb is None:            
             cb_res = cb(self.population, self.config) if pass_config else cb(self.population)
         
-        print(self.population)
-
         return [self.population[int(x[0])] for x in self.fitness] if cb_res is None else cb_res
     
     
@@ -133,9 +129,6 @@ class GeneticAlgorithm():
         
         # list from 0 to generations
         selection = np.linspace(0, self.population_size - 1 , self.population_size, dtype=np.int_)
-        #selection = self.seed_generator.shuffle(
-        #    np.linspace(0, 48,2)
-        #)
 
         self.seed_generator.shuffle(selection)
 

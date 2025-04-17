@@ -17,12 +17,14 @@ import numpy as np
 if TYPE_CHECKING:
     from track_gen.abstract import abstract_track
     
-
 class TrackGenerator(abstract_track_generator.TrackGenerator):
     
     def __init__(self, config: dict) -> None:
         self._bezier = bezier.Bezier(1, 0.01)
         self.config = config
+        
+        # load the bins for entropy of curvature
+        self.curvature_bins = utils.read_np(self.config['curvature_bin_dataset'])
     
     def generate_track(self, seed: int):
         self.seed = np.random.default_rng(seed)
@@ -32,51 +34,39 @@ class TrackGenerator(abstract_track_generator.TrackGenerator):
         track = convex_hull_track.ConvexHullTrack(_num_points, seed)
         
         # generate new points and check if within threshold
-        points = self._within_threshold(self._initialise_points(_num_points))
-
+        points = self._within_threshold(self._initialise_points())
         # generate hull points
-        hull = self._concave_hull(
-            points, _num_points
-        )     
+        hull = self._concave_hull(points)     
         
         # calculate and encode the control points
-        control = self._calculate_control_points(track, _num_points, hull)    
-        bezier_segments = self._calculate_bezier(_num_points, control, hull) 
-        
-        # WHEN DOING CROSS OVER
-        # RE CALCULATE
-        # BEZIER SEGMENTS
-        # CURV PROFILE
-        # BEZIER_COORIDNATES (only for rendering)
-    
-        # encode the bezier segments
-        track.BEZIER_SEGMENTS = np.asanyarray(bezier_segments)
-        # get the curvature profile of the track
-        track.CURVATURE_PROFILE = self._curvature_profile(track)
-        
-        # calculate full track coordinates
-        track.BEZIER_COORDINATES = self._track_coordinates(track)
-        
-        # calculate track length
-        track = self._track_length(track)
+        self._calculate_control_points(track, hull)   
+                
+        # calculate BEZIER_SEGMENTS, CURVATURE_PROFILE, TRACK_COORDS, LENGTH
+        self._calc_track_params(track)
+                         
         return track
     
     def _track_length(self, track: abstract_track.Track) -> abstract_track.Track:
-        track.LENGTH = np.sum(track.BEZIER_SEGMENTS[:, 8])       
-        return track
+        track.encode_track_length(np.sum(track.BEZIER_SEGMENTS[:, 8]))
 
     def _track_coordinates(self, track: abstract_track.Track) -> abstract_track.Track:
         # for each bezier segment
         coordinates = [] 
+        offset_coords = []
+        offset = -70
         
         for segment in track.BEZIER_SEGMENTS: 
             wx = segment[0:7:2] 
-            wy = segment[1:8:2] 
-            coordinates.extend(self._bezier.generate_bezier(self._bezier.CUBIC, wx, wy, 0.01))
-
-        return coordinates
+            wy = segment[1:8:2]
+            segment = self._bezier.generate_bezier(self._bezier.CUBIC, wx, wy, 0.1) 
+            coordinates.extend(segment)
+            offset_coords.extend(self._bezier.offset_curve(offset, segment, wx, wy))
             
-    def _initialise_points(self, num_points: int) -> np.ndarray:
+            
+        track.encode_track_coordinates(np.asanyarray(coordinates))
+        #track.encode_upper_offset(np.asanyarray(offset_coords)) change if using bezier offsets
+            
+    def _initialise_points(self) -> np.ndarray:
         """
             Generates `num_points` random points with bounds defined in`config['x_bounds']`and`config['y_bounds']`
 
@@ -86,8 +76,8 @@ class TrackGenerator(abstract_track_generator.TrackGenerator):
         y_bounds = self.config["y_bounds"]
         
         # generate coordinates 
-        x_coords = self.seed.uniform(x_bounds["low"], x_bounds["high"], num_points)[:, np.newaxis]
-        y_coords = self.seed.uniform(y_bounds["low"], y_bounds["high"], num_points)[:, np.newaxis]
+        x_coords = self.seed.uniform(x_bounds["low"], x_bounds["high"], self.config["control_points"])[:, np.newaxis]
+        y_coords = self.seed.uniform(y_bounds["low"], y_bounds["high"], self.config["control_points"])[:, np.newaxis]
         
         return np.column_stack((x_coords, y_coords))
         
@@ -118,7 +108,7 @@ class TrackGenerator(abstract_track_generator.TrackGenerator):
         return points        
             
     
-    def _concave_hull(self, points: np.ndarray, num_points: int) -> np.ndarray:
+    def _concave_hull(self, points: np.ndarray) -> np.ndarray:
         """
             Calculates the concave hull of the given points. If the number of points within the concave hull is less than `num_points`,
             regenerate missing points.
@@ -130,7 +120,7 @@ class TrackGenerator(abstract_track_generator.TrackGenerator):
         x_bounds = self.config['x_bounds']
         y_bounds = self.config['y_bounds']
         
-        while (hull_points.shape[0] < num_points):
+        while (hull_points.shape[0] < self.config["control_points"]):
             # get all the indexes of points that arent part of concave hull
             # generate new points till concave hull covers all            
             bad_points_mask = ~(np.all(points[:, None] == hull_points, axis=-1).any(axis=1))
@@ -152,7 +142,7 @@ class TrackGenerator(abstract_track_generator.TrackGenerator):
                   
         return hull_points 
         
-    def _calculate_control_points(self, track: convex_hull_track.abstract_track, num_points: int, points: np.ndarray) -> np.ndarray:
+    def _calculate_control_points(self, track: convex_hull_track.abstract_track, points: np.ndarray) -> np.ndarray:
         """
             Calculates the control points used in the bezier curve.
         """
@@ -161,15 +151,15 @@ class TrackGenerator(abstract_track_generator.TrackGenerator):
         
         # apply a random offset to the gradient 
         # this breaks up the shape of the track, makes it a bit more natural
-        slope_offset = self.seed.uniform(self.config['slope_offset']['low'], self.config['slope_offset']['high'], (num_points))
+        slope_offset = self.seed.uniform(self.config['slope_offset']['low'], self.config['slope_offset']['high'], (self.config["control_points"]))
         perp_slopes = perp_slopes + slope_offset
         
         # calculate the y intercepts
         y_intercepts = utils.LinearAlgebra.get_y_intercept(perp_slopes, points[:, 1], points[:, 0])
         
         # initialise arrays for control points
-        c1 = np.ndarray(shape=(num_points, 2))
-        c2 = np.ndarray(shape=(num_points, 2))
+        c1 = np.ndarray(shape=(self.config["control_points"], 2))
+        c2 = np.ndarray(shape=(self.config["control_points"], 2))
         
         # using the function utils.LinearAlgebra.linear_eq
         # calculate two points along the line of perp_slopes
@@ -177,7 +167,7 @@ class TrackGenerator(abstract_track_generator.TrackGenerator):
 
         control_offset = self.config['control_point_offset'] 
 
-        for point in range(num_points):
+        for point in range(self.config["control_points"]):
             current_point = points[point]
             
             _control = utils.LinearAlgebra.linear_eq(
@@ -197,17 +187,19 @@ class TrackGenerator(abstract_track_generator.TrackGenerator):
             c2[:, 1, np.newaxis]
         )
 
-        return np.hstack((c1, c2))
     
-    def _calculate_bezier(self, num_points: int, control_points: np.ndarray, points: np.ndarray) -> np.ndarray:
+    def _calculate_bezier(self, track: abstract_track.Track) -> np.ndarray:
         """
             Calculates the weightings used for bezier curves
             Encodes the resulting bezier curves as segments.
-            
         """
         reserved_control = []
         segments = []
-                
+        
+        control_points = track.CONTROL_POINTS[:, 3:7]
+        points = track.CONTROL_POINTS[:, 0:2]
+        num_points = self.config["control_points"]
+         
         for idx in range(num_points):
             n_idx = utils.clamp(idx + 1, 0, num_points)            
             
@@ -227,8 +219,12 @@ class TrackGenerator(abstract_track_generator.TrackGenerator):
             # check control points are reserverd
             # this stops point like corners forming
             # if point is reserved, swap over
-            if c1 in reserved_control: c1 = control_points[idx, 0:2] if dist_p2_c1 > dist_p2_c2 else control_points[idx, 2:4]
-            if c2 in reserved_control: c2 = control_points[n_idx, 0:2] if dist_p1_n1 > dist_p1_n2 else control_points[n_idx, 2:3]
+            if c1.tolist() in reserved_control: c1 = control_points[idx, 0:2] if dist_p2_c1 > dist_p2_c2 else control_points[idx, 2:4]
+            if c2.tolist() in reserved_control: c2 = control_points[n_idx, 0:2] if dist_p1_n1 > dist_p1_n2 else control_points[n_idx, 2:4]
+            
+            # add control points to reserved
+            reserved_control.append(c1.tolist())
+            reserved_control.append(c2.tolist())
             
             weights = np.vstack((
                 points[idx], c1, c2, points[n_idx]
@@ -238,16 +234,19 @@ class TrackGenerator(abstract_track_generator.TrackGenerator):
             segment = np.insert(segment, 0, np.hstack((points[idx], c1, c2, points[n_idx])))
                                                              
             # use a rough approximation of the bezier curve to calculate the arc length
-            length = self._bezier.approx_arc_length(weights[:, 0], weights[:, 1])
+            # round to the nearest integer
+            length = round(self._bezier.approx_arc_length(weights[:, 0], weights[:, 1]))
     
             # add length to segment
             segment = np.insert(segment, 8, length)
             
             segments.append(segment)
-        return segments        
+
+        # assign segments to track
+        track.encode_bezier_segments(np.asanyarray(segments))
 
     def _curvature_profile(self, track: abstract_track.Track) -> abstract_track.Track: 
-        segment_curv = []
+        segment_curv = [] # curvature has to be a list (not np.ndarray) as each segement has a different length
         for segment in track.BEZIER_SEGMENTS:
             wx = segment[0:7:2] 
             wy = segment[1:8:2] 
@@ -257,6 +256,173 @@ class TrackGenerator(abstract_track_generator.TrackGenerator):
             t = self._bezier.fixed_distance_interval(wx, wy, length)
                  
             # get curvature of the curve
-            segment_curv.append(self._bezier.get_bezier_curvature_t(wx, wy, t))
-        return segment_curv
+            curvature_profile = self._bezier.get_bezier_curvature_t(wx, wy, t)
+            
+            # ensure curvature_profile has the same size as segment length
+            # this makes the profile loose some accuracy, but these are typically within
+            # boundaries of curves, where the curvature is close to or equal to zero
+            if (len(curvature_profile) > length):
+                diff = len(curvature_profile) - int(length)
+                curvature_profile = curvature_profile[:-diff]
+
+            segment_curv.extend(curvature_profile) # append or extend
+        track.encode_curvature_profile(segment_curv)
+        
+    def _calc_track_params(self, track: abstract_track.Track) -> None:
+        """
+            Calculates the following track parameters  
+                `self.BEZIER_SEGMENTS`
+                `self.CURVATURE_PROFILE`
+                `self.TRACK_COORDS`
+                `self.LENGTH`
+        """
+        self._calculate_bezier(track)
+        self._curvature_profile(track)
+        self._track_length(track)
+        
+        self._track_coordinates(track)
     
+    def crossover(self, parents: list[abstract_track.Track]) -> list[abstract_track.Track]:
+        """
+            Performs crossover on pairs of parents 
+        """        
+        
+        offspring = []
+        _parents = len(parents)
+        
+        # instead of getting crossover point as an index arrary
+        # cross on a random line through origin
+        
+        
+        # edge condition where list of parents does not contain enough parents
+        if not _parents % 2 == 0:
+            return parents
+                
+        for i in range(0, _parents, 2):
+            # use the seed of the first parent
+            p1 = parents[i]
+            p2 = parents[i+1]
+           
+            p1_geno = p1.get_genotype()
+            p2_geno = p2.get_genotype()
+                       
+            rng = np.random.default_rng(seed=p1.seed)
+
+            # generate random angle
+            crossover_slope = np.sin(rng.integers(low=0, high=360, size=(1)))
+            
+            # for every point in both genotypes
+            # get above and below the line
+            # only crossover above / below
+            _num_cp = p1._control_points
+            
+            # split parents into two arrays
+            pos_delta__p1 = []
+            pos_delta__p2 = []
+            
+            for index in range(_num_cp):
+                # parent one
+                pgenotypes = [
+                    p1_geno[index],
+                    p2_geno[index]
+                ]
+                
+                p_ly = [
+                    utils.LinearAlgebra.line_eq(crossover_slope, pgenotypes[0][0]),
+                    utils.LinearAlgebra.line_eq(crossover_slope, pgenotypes[1][0])
+                ]
+                
+                pos_delta__p1.append(False if p_ly[0] > pgenotypes[0][1] else True)
+                pos_delta__p2.append(False if p_ly[1] > pgenotypes[1][1] else True)
+                    
+            pos_delta__p1 = np.asarray(pos_delta__p1)
+            pos_delta__p2 = np.asarray(pos_delta__p2)
+            
+            p1_crossover = np.where((pos_delta__p1 == pos_delta__p2)[:, np.newaxis], p1_geno, p2_geno).T
+            p2_crossover = np.where((pos_delta__p1 == pos_delta__p2)[:, np.newaxis], p2_geno, p1_geno).T     
+
+            offspring.append(convex_hull_track.ConvexHullTrack(p1._control_points, p1.seed))
+            offspring.append(convex_hull_track.ConvexHullTrack(p2._control_points, p2.seed))
+                        
+            # encode control points
+            # attempted to unpack array using *
+            # unfortunately results in the wrong shape of
+            # (1, 10) instead of (10,1)
+            offspring[i].encode_control_points(p1_crossover[0].T[:, np.newaxis], p1_crossover[1].T[:, np.newaxis], p1_crossover[2].T[:, np.newaxis], p1_crossover[3].T[:, np.newaxis], p1_crossover[4].T[:, np.newaxis], p1_crossover[5].T[:, np.newaxis], p1_crossover[6].T[:, np.newaxis])
+            offspring[i+1].encode_control_points(p2_crossover[0].T[:, np.newaxis], p2_crossover[1].T[:, np.newaxis], p2_crossover[2].T[:, np.newaxis], p2_crossover[3].T[:, np.newaxis], p2_crossover[4].T[:, np.newaxis], p2_crossover[5].T[:, np.newaxis], p2_crossover[6].T[:, np.newaxis])
+            
+            # re calculate segments, curvature profile and track coordinates for each track
+            self._calc_track_params(offspring[i])
+            self._calc_track_params(offspring[i+1])
+        return offspring
+
+    
+    def mutate(self, track: abstract_track.Track) -> abstract_track.Track:
+        mutate_point = self.seed.integers(0, self.config["control_points"], size=1)
+
+        p_idx = utils.clamp(mutate_point + 1, 0, self.config["control_points"])
+        n_idx = utils.clamp(mutate_point - 1, 0, self.config["control_points"])
+
+        track_geno = track.get_genotype()
+        track_points = np.hstack((track_geno[:, 0, np.newaxis], track_geno[:, 1,np.newaxis]))
+        
+        # calculate the x and y bounds
+        x_range = track_points[n_idx][0][0] >= track_points[p_idx][0][0]
+        x_bounds = [
+            track_points[p_idx][0][0] if x_range else track_points[n_idx][0][0],
+            track_points[p_idx][0][0] if not x_range else track_points[n_idx][0][0]    
+        ]
+        
+        y_range = np.any(track_points[n_idx][0][1] >= track_points[p_idx][0][1])
+        
+        y_bounds = [
+            track_points[p_idx][0][1] if y_range else track_points[n_idx][0][1],
+            track_points[p_idx][0][1] if not y_range else track_points[n_idx][0][1]    
+        ]
+        
+        # generate new coordinate 
+        x_coords = self.seed.uniform(x_bounds[0], x_bounds[1], 1)
+        y_coords = self.seed.uniform(y_bounds[0], y_bounds[1], 1)
+        
+        # replace old point
+        track_points[mutate_point] = np.asanyarray([x_coords, y_coords]).T
+
+        # calculate and encode the control points
+        self._calculate_control_points(track, track_points)   
+                
+        # calculate BEZIER_SEGMENTS, CURVATURE_PROFILE, TRACK_COORDS, LENGTH
+        self._calc_track_params(track) 
+         
+    def fitness(self, track: abstract_track.Track) -> float:
+        # calculate the percent of the track that belongs in each bin
+        fitness = 100
+        
+        total_segments = track.LENGTH
+        c = [] # track diversity, as a percent of the track within each bin 
+        
+        for databin in self.curvature_bins:
+            bin_segments = 0
+            curv_min = databin[0]
+            curv_max = databin[1]
+            
+            # analyse
+            for segment in track.CURVATURE_PROFILE:
+                # count the segments within the current bin
+                if curv_min <= segment < curv_max: bin_segments += 1 
+
+            # ignore bins that do not contain any track segments
+            if bin_segments != 0: c.append(bin_segments / total_segments)
+
+        # calculate the entropy of curvature and normalise for 100
+        c = np.asanyarray(c) # convert to numpy array
+        entropy = - np.sum(c * np.log2(c))
+        
+        fitness = (fitness * entropy) - (5 * utils.LinearAlgebra.intersection_bezier_curve(track.TRACK_COORDS))
+        track.encode_fitness(fitness)    
+            
+        return fitness
+        
+        
+        
+
+        

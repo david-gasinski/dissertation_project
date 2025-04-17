@@ -156,7 +156,7 @@ class ConvexHullGenerator(abstract_track_generator.TrackGenerator):
     
     def mutate(self, track: abstract_track.Track, config: dict) -> abstract_track.Track:
         """
-            Picks a random index and moves the control point within the 
+            Picks a random index and moves the point within the 
             bounds defined by the previous and next point, keeping the
             shape uniform and not breaking it up
         """
@@ -181,7 +181,7 @@ class ConvexHullGenerator(abstract_track_generator.TrackGenerator):
             track_genotype[prev_index][0][1] if not y_range else track_genotype[next_index][0][1]    
         ]
 
-        # generate coordinates 
+        # generate coordinate 
         x_coords = rng.uniform(x_bounds[0], x_bounds[1], 1)
         y_coords = rng.uniform(y_bounds[0], y_bounds[1], 1)
             
