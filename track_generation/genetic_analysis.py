@@ -30,7 +30,7 @@ track_gen = track_generator.TrackGenerator(config['concave_hull'])
 
 generation_path = "tracks/generations/{gen}"
 
-for i in range(max_generations):
+for i in range(1, max_generations):
     
     # create the folder structure
     try:
