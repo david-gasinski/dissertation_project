@@ -22,6 +22,6 @@
             "low": -0.1
         },
         "render": true,
-        "curvature_bin_dataset": "datasets\\scripts\\output\\data_bins\\curvature_bins.json"
+        "curvature_bin_dataset": "datasets/scripts/output/data_bins/curvature_bins.json"
     }
 }
