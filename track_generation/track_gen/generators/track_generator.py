@@ -401,6 +401,9 @@ class TrackGenerator(abstract_track_generator.TrackGenerator):
         total_segments = track.LENGTH
         c = [] # track diversity, as a percent of the track within each bin 
         
+        lower_bin = self.curvature_bins[0]
+        upper_bin = self.curvature_bins[-1]
+        
         for databin in self.curvature_bins:
             bin_segments = 0
             curv_min = databin[0]
@@ -411,8 +414,8 @@ class TrackGenerator(abstract_track_generator.TrackGenerator):
                 # count the segments within the current bin
                 if curv_min <= segment < curv_max: bin_segments += 1 
                 
-                # if the segment is outside the range, penalise heavy
-                if curv_min > segment or segment > curv_max: penalty += 20
+                # if the segment is outside the bin range, penalise 
+                if lower_bin > segment or segment > upper_bin: penalty += 20
 
             # ignore bins that do not contain any track segments
             if bin_segments != 0: c.append(bin_segments / total_segments)
