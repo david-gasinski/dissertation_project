@@ -8,8 +8,8 @@ import os
 import numpy as np
 
 max_generations = 300
-min_generations = 20
-generation_step_size = 5
+min_generations = 150
+generation_step_size = 10
 
 def save_track(track, data_path, img_path):
     json.dump(track.serialize(), codecs.open(data_path, 'w', encoding='utf-8'), 
@@ -45,7 +45,8 @@ for i in range(min_generations, max_generations, generation_step_size):
         2,
         0.1,
         100,
-        i
+        i,
+        crossover_type='uniform'
     )
     
     tracks = genetic.start_generations()
