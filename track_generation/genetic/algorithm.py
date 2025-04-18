@@ -11,15 +11,24 @@ class GeneticAlgorithm():
         Main class for genetic algorithm implementation.
         
         This architecture allows the use of callback functions for analysing fitness.
+    
+        Crossover types:
+            single-point
+            uniform
     """
     
-    def __init__(self, generator: abstract_track_generator.TrackGenerator, tournament_size_k: int, mutation_rate: float, population_size: int = 100, generations: int = 100) -> None:
+    def __init__(self, generator: abstract_track_generator.TrackGenerator, tournament_size_k: int, mutation_rate: float, population_size: int = 100, generations: int = 100, crossover_type: str = 'single-point') -> None:
         self.population_size = population_size
         self.generations = generations
         self.generator = generator
         
         self.mutation_rate = mutation_rate
-        self.tournament_size_k = tournament_size_k
+        self.tournament_size_k = tournament_size_k#
+        
+        if crossover_type == 'single-point':
+            self.crossover = self.generator.crossover    
+        elif crossover_type == 'uniform':
+            self.crossover = self.generator.uniform_crossover
         
         self.average_fitness = np.ndarray(shape=(generations))
         
@@ -75,7 +84,7 @@ class GeneticAlgorithm():
             parents = self.tournament_selection(self.tournament_size_k)
             
             # generate the offspring
-            offspring = self.generator.crossover(parents)
+            offspring = self.crossover(parents)
             
             # perform mutations based on mutation rate
             mutation_count = int(len(offspring) * self.mutation_rate)
