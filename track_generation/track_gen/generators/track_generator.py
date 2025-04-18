@@ -396,6 +396,7 @@ class TrackGenerator(abstract_track_generator.TrackGenerator):
     def fitness(self, track: abstract_track.Track) -> float:
         # calculate the percent of the track that belongs in each bin
         fitness = 100
+        penalty = 0
         
         total_segments = track.LENGTH
         c = [] # track diversity, as a percent of the track within each bin 
@@ -409,6 +410,9 @@ class TrackGenerator(abstract_track_generator.TrackGenerator):
             for segment in track.CURVATURE_PROFILE:
                 # count the segments within the current bin
                 if curv_min <= segment < curv_max: bin_segments += 1 
+                
+                # if the segment is outside the range, penalise heavy
+                if curv_min > segment or segment > curv_max: penalty += 20
 
             # ignore bins that do not contain any track segments
             if bin_segments != 0: c.append(bin_segments / total_segments)
@@ -417,7 +421,7 @@ class TrackGenerator(abstract_track_generator.TrackGenerator):
         c = np.asanyarray(c) # convert to numpy array
         entropy = - np.sum(c * np.log2(c))
         
-        fitness = (fitness * entropy) - (5 * utils.LinearAlgebra.intersection_bezier_curve(track.TRACK_COORDS))
+        fitness = (fitness * entropy) - (5 * utils.LinearAlgebra.intersection_bezier_curve(track.TRACK_COORDS)) - penalty
         track.encode_fitness(fitness)    
             
         return fitness
