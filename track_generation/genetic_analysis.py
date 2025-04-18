@@ -30,7 +30,7 @@ with open("config.json") as f:
 
 track_gen = track_generator.TrackGenerator(config['concave_hull'])
 
-generation_path = "tracks/issue_35/{}"
+generation_path = "tracks/issue_36/{}"
 
 for i in range(min_generations, max_generations, generation_step_size):
     
@@ -46,7 +46,7 @@ for i in range(min_generations, max_generations, generation_step_size):
         0.1,
         100,
         i,
-        crossover_type='uniform'
+        crossover_type='single-point'
     )
     
     tracks = genetic.start_generations()
