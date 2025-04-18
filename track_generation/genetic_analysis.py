@@ -30,7 +30,7 @@ with open("config.json") as f:
 
 track_gen = track_generator.TrackGenerator(config['concave_hull'])
 
-generation_path = "tracks/generations/{}"
+generation_path = "tracks/issue_31/{}"
 
 for i in range(min_generations, max_generations, generation_step_size):
     
@@ -51,11 +51,12 @@ for i in range(min_generations, max_generations, generation_step_size):
     tracks = genetic.start_generations()
     
     # save and serialize each track
-    for track in tracks:
+    for idx in range(len(tracks)):
+        track = tracks[idx]
         save_track(
             track, 
-            os.path.join(generation_path.format(i), f"tracks/{track.fitness()} {track.seed}.json"),
-            os.path.join(generation_path.format(i), f"tracks/{track.fitness()} {track.seed}.png")
+            os.path.join(generation_path.format(i), f"tracks/{track.fitness()} {track.seed} {idx}.json"),
+            os.path.join(generation_path.format(i), f"tracks/{track.fitness()} {track.seed} {idx}.png")
         )
     
     # plot and save the average fitness vs generations
