@@ -421,7 +421,7 @@ class TrackGenerator(abstract_track_generator.TrackGenerator):
         c = np.asanyarray(c) # convert to numpy array
         entropy = - np.sum(c * np.log2(c))
         
-        fitness = (fitness * entropy) - (5 * utils.LinearAlgebra.intersection_bezier_curve(track.TRACK_COORDS)) - penalty
+        fitness = (fitness * entropy) - (12.5 * utils.LinearAlgebra.intersection_bezier_curve(track.TRACK_COORDS)) - penalty
         track.encode_fitness(fitness)    
             
         return fitness
