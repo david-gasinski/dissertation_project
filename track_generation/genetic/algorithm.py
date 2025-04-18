@@ -84,7 +84,7 @@ class GeneticAlgorithm():
             parents = self.tournament_selection(self.tournament_size_k)
             
             # generate the offspring
-            offspring = self.crosover(parents)
+            offspring = self.crossover(parents)
             
             # perform mutations based on mutation rate
             mutation_count = int(len(offspring) * self.mutation_rate)
