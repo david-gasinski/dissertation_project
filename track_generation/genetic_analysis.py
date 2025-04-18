@@ -7,8 +7,9 @@ import codecs
 import os
 import numpy as np
 
-
-max_generations = 1000
+max_generations = 300
+min_generations = 20
+generation_step_size = 5
 
 def save_track(track, data_path, img_path):
     json.dump(track.serialize(), codecs.open(data_path, 'w', encoding='utf-8'), 
@@ -22,15 +23,16 @@ def save_track(track, data_path, img_path):
     plt.ylabel("y")
     plt.title(f"Fitness: {track.fitness()} [{track.seed}]")
     plt.savefig(img_path)
+    plt.clf()
 
 with open("config.json") as f:
     config = json.load(f)
 
 track_gen = track_generator.TrackGenerator(config['concave_hull'])
 
-generation_path = "tracks/generations/{gen}"
+generation_path = "tracks/generations/{}"
 
-for i in range(max_generations):
+for i in range(min_generations, max_generations, generation_step_size):
     
     # create the folder structure
     try:
@@ -52,8 +54,8 @@ for i in range(max_generations):
     for track in tracks:
         save_track(
             track, 
-            os.path.join(generation_path.format(i), f"tracks/{track.fitness()} [{track.seed}].json"),
-            os.path.join(generation_path.format(i), f"tracks/{track.fitness()} [{track.seed}].png")
+            os.path.join(generation_path.format(i), f"tracks/{track.fitness()} {track.seed}.json"),
+            os.path.join(generation_path.format(i), f"tracks/{track.fitness()} {track.seed}.png")
         )
     
     # plot and save the average fitness vs generations
@@ -64,4 +66,16 @@ for i in range(max_generations):
     plt.ylabel("Average Fitness")
     plt.title("Average Fitness vs Generations")
     plt.savefig(os.path.join(generation_path.format(i), "convergence.png"))
+    plt.clf()
+
+    print(f"Finished {i} generations in {np.sum(genetic.runtime)}s")
+    
+    # plot runtimes
+    plt.plot(generations, genetic.runtime)
+    plt.xlabel("Number of Generations")
+    plt.ylabel("Runtime (s)")
+    plt.title("Generations vs Runtime (s)")
+    plt.savefig(os.path.join(generation_path.format(i), "run_time.png"))
+    plt.clf()
+    
     
