@@ -401,8 +401,8 @@ class TrackGenerator(abstract_track_generator.TrackGenerator):
         total_segments = track.LENGTH
         c = [] # track diversity, as a percent of the track within each bin 
         
-        lower_bin = self.curvature_bins[0]
-        upper_bin = self.curvature_bins[-1]
+        lower_bin = self.curvature_bins[0][0]
+        upper_bin = self.curvature_bins[-1][1]       
         
         for databin in self.curvature_bins:
             bin_segments = 0
