@@ -25,8 +25,4 @@ class ConvexHullTrack(abstract_track.Track):
             
             pygame.draw.line(screen, (0,255,0), screen_coord_current, screen_coord_next, 1)
             
-    def fitness(self):
-        self._fitness = 100 - (5 * utils.LinearAlgebra.intersection_bezier_curve(self.TRACK_COORDS))
-        return self._fitness
-    
     

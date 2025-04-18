@@ -22,6 +22,8 @@ class GeneticAlgorithm():
         self.tournament_size_k = tournament_size_k
         
         self.average_fitness = np.ndarray(shape=(generations))
+        
+        self.runtime = np.ndarray(shape=(generations)) # performance tracking
 
         # for performane reasons, two arrays are used
         # python list to store the track object
@@ -99,7 +101,9 @@ class GeneticAlgorithm():
             # save fitness
             self.average_fitness[generations] = np.average(self.fitness[:, 2])
             
-            print(f"Generation {generations}. Average fitness is {self.average_fitness[generations]}. Time to run {timeit.default_timer() - start}")            
+            #print(f"Generation {generations}. Average fitness is {self.average_fitness[generations]}. Time to run {timeit.default_timer() - start}")            
+            self.runtime[generations] = timeit.default_timer() - start
+            
             generations += 1
         
         # as a final pass, calculate fitness and return population 

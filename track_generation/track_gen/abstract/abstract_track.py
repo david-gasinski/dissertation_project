@@ -164,10 +164,12 @@ class Track():
                 self.fitness    
             to be saved in json file
         """
-        return json.dumps({
-            "seed": self.seed,
+        genotype_list = self.CONTROL_POINTS.tolist()
+                
+        return {
+            "seed": self.seed.tolist(),
             "fitness" : self._fitness,
-            "genotype": self.CONTROL_POINTS.tolist()
-        })
+            "genotype": genotype_list
+        }
         
     
