@@ -7,8 +7,9 @@ import codecs
 import os
 import numpy as np
 
-
-max_generations = 1000
+max_generations = 300
+min_generations = 20
+generation_step_size = 5
 
 def save_track(track, data_path, img_path):
     json.dump(track.serialize(), codecs.open(data_path, 'w', encoding='utf-8'), 
@@ -31,7 +32,7 @@ track_gen = track_generator.TrackGenerator(config['concave_hull'])
 
 generation_path = "tracks/generations/{}"
 
-for i in range(10, max_generations):
+for i in range(min_generations, max_generations, generation_step_size):
     
     # create the folder structure
     try:
