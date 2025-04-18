@@ -554,6 +554,7 @@ class TrackGenerator(abstract_track_generator.TrackGenerator):
     def fitness(self, track: abstract_track.Track) -> float:
         # calculate the percent of the track that belongs in each bin
         fitness = 100
+        penalty = 0
 
         total_segments = track.LENGTH
         c = []  # track diversity, as a percent of the track within each bin
