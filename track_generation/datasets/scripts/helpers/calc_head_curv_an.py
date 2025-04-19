@@ -109,8 +109,3 @@ def calc_head_curv_an(coeffs_x: np.ndarray,
     else:
 
         return psi, kappa
-
-
-# testing --------------------------------------------------------------------------------------------------------------
-if __name__ == "__main__":
-    pass

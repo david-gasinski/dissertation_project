@@ -20,10 +20,10 @@ def get_curv(path: str) -> None:
     # calculate curvature (required to be able to differentiate straight and corner sections)
     path_cl = np.vstack((sampled_track[:, :2], sampled_track[0, :2]))
     coeffs_x, coeffs_y = calc_splines.calc_splines(path=path_cl)[:2]
-    kappa_path = calc_head_curv_an.calc_head_curv_an(coeffs_x=coeffs_x,
+    psi, kappa_path = calc_head_curv_an.calc_head_curv_an(coeffs_x=coeffs_x,
                                                          coeffs_y=coeffs_y,
                                                          ind_spls=np.arange(0, coeffs_x.shape[0]),
-                                                         t_spls=np.zeros(coeffs_x.shape[0]))[1]
+                                                         t_spls=np.zeros(coeffs_x.shape[0]))
     return kappa_path
 
 def save_np(path: str, arr: np.ndarray) -> None:
