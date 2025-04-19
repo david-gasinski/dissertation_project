@@ -566,7 +566,7 @@ class TrackGenerator(abstract_track_generator.TrackGenerator):
             curv_min = databin[0]
             curv_max = databin[1]
             
-            total_segments = 0
+            total_segments = track.LENGTH
             # analyse
             for segment in track.CURVATURE_PROFILE:
                 # ignore segements with curvatures between -0.01 and 0.01
@@ -574,7 +574,8 @@ class TrackGenerator(abstract_track_generator.TrackGenerator):
                     continue
                 
                 # count the segments within the current bin
-                if curv_min <= segment < curv_max: bin_segments += 1 
+                if curv_min <= segment < curv_max: 
+                    bin_segments += 1 
                 
                 # if the segment is outside the bin range, penalise 
                 if lower_bin > segment or segment > upper_bin: penalty += 20

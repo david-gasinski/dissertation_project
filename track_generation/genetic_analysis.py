@@ -9,7 +9,7 @@ import numpy as np
 
 max_generations = 300
 min_generations = 200
-generation_step_size = 120
+generation_step_size = 20
 
 def save_track(track, data_path, img_path):
     json.dump(track.serialize(), codecs.open(data_path, 'w', encoding='utf-8'), 
