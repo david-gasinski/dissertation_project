@@ -46,7 +46,7 @@ for i in range(min_generations, max_generations, generation_step_size):
         0.1,
         100,
         i,
-        crossover_type='uniform'
+        crossover_type='single-point'
     )
     
     tracks = genetic.start_generations()
