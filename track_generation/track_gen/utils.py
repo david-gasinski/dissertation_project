@@ -1,5 +1,6 @@
 import numpy as np
-from typing import Union
+from typing import Unions
+import matplotlib.pyplot as plt
 import codecs
 import json 
 
@@ -290,3 +291,20 @@ def read_np(path: str) -> None:
     obj_text = codecs.open(path, 'r', encoding='utf-8').read()
     py_arr = json.loads(obj_text) # python arr
     return np.array(py_arr)
+
+def save_track(track, data_path, img_path):
+    """
+        Exports a given track to a json file and a .png image
+    """
+    json.dump(track.serialize(), codecs.open(data_path, 'w', encoding='utf-8'), 
+          separators=(',', ':'), 
+          sort_keys=True, 
+          indent=4)
+    
+    # plot the track 
+    plt.plot(track.TRACK_COORDS[:, 0], track.TRACK_COORDS[:, 1])
+    plt.xlabel("x")
+    plt.ylabel("y")
+    plt.title(f"Fitness: {track.fitness()} [{track.seed}]")
+    plt.savefig(img_path)
+    plt.clf()
