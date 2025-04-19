@@ -12,9 +12,9 @@ load_dotenv()
 
 from common.notifications import NotifcationClient
 
-max_generations = 1000
-min_generations = 1020
-generation_step_size = 20
+max_generations = 300
+min_generations = 1001
+generation_step_size = 700
 
 def save_track(track, data_path, img_path):
     json.dump(track.serialize(), codecs.open(data_path, 'w', encoding='utf-8'), 
@@ -36,7 +36,7 @@ with open("config.json") as f:
 track_gen = track_generator.TrackGenerator(config['concave_hull'])
 noti = NotifcationClient(os.getenv("PUSHOVER_APP_KEY"), os.getenv("PUSHOVER_USER_KEY"))
 
-generation_path = "tracks/issue_41/{}"
+generation_path = "tracks/issue_40/{}"
 
 for i in range(min_generations, max_generations, generation_step_size):
     

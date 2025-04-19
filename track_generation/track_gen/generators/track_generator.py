@@ -583,7 +583,7 @@ class TrackGenerator(abstract_track_generator.TrackGenerator):
         entropy = -np.sum(c * np.log2(c))
 
         fitness = (fitness * entropy) - (
-            12.5 * utils.LinearAlgebra.intersection_bezier_curve(track.TRACK_COORDS)
+            50 * utils.LinearAlgebra.intersection_bezier_curve(track.TRACK_COORDS)
         )
         track.encode_fitness(fitness)
 
