@@ -22,6 +22,17 @@
             "low": -0.1
         },
         "render": true,
-        "curvature_bin_dataset": "datasets/scripts/output/data_bins/curvature_bins.json"
+        "curvature_bin_dataset": "datasets/scripts/output/data_bins/curvature_bins.json",
+        "ea_config": {
+            "max_generations": 1001,
+            "min_generations": 300,
+            "generation_step_size": 700,
+            "tournament_size": 2,
+            "mutation_rate": 0.1,
+            "population": 100,
+            "crossover": "single-point",
+            "save_generations": 50,
+            "generation_path": "tracks/issue_/{}"
+        }
     }
 }

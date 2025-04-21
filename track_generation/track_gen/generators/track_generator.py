@@ -396,7 +396,7 @@ class TrackGenerator(abstract_track_generator.TrackGenerator):
             p2_crossover = np.where(
                 (pos_delta__p1 == pos_delta__p2)[:, np.newaxis], p2_geno, p1_geno
             ).T
-
+            
             offspring.append(
                 convex_hull_track.ConvexHullTrack(p1._control_points, p1.seed)
             )
@@ -404,32 +404,20 @@ class TrackGenerator(abstract_track_generator.TrackGenerator):
                 convex_hull_track.ConvexHullTrack(p2._control_points, p2.seed)
             )
 
-            # encode control points
-            # attempted to unpack array using *
-            # unfortunately results in the wrong shape of
-            # (1, 10) instead of (10,1)
-            offspring[i].encode_control_points(
-                p1_crossover[0].T[:, np.newaxis],
-                p1_crossover[1].T[:, np.newaxis],
-                p1_crossover[2].T[:, np.newaxis],
-                p1_crossover[3].T[:, np.newaxis],
-                p1_crossover[4].T[:, np.newaxis],
-                p1_crossover[5].T[:, np.newaxis],
-                p1_crossover[6].T[:, np.newaxis],
-            )
-            offspring[i + 1].encode_control_points(
-                p2_crossover[0].T[:, np.newaxis],
-                p2_crossover[1].T[:, np.newaxis],
-                p2_crossover[2].T[:, np.newaxis],
-                p2_crossover[3].T[:, np.newaxis],
-                p2_crossover[4].T[:, np.newaxis],
-                p2_crossover[5].T[:, np.newaxis],
-                p2_crossover[6].T[:, np.newaxis],
-            )
+            # generate concave hull
+            # calculaute control points
+            # encode and calculate the rest
+            def create_offspring(track: abstract_track.Track, points: np.ndarray) -> abstract_track.Track:
+                hull = self._concave_hull(points)
+                
+                self._calculate_control_points(track, hull)
+                self._calc_track_params(track)
+                
+                return track
 
-            # re calculate segments, curvature profile and track coordinates for each track
-            self._calc_track_params(offspring[i])
-            self._calc_track_params(offspring[i + 1])
+            offspring[i] = create_offspring(offspring[i], np.hstack((p1_crossover[0, :, np.newaxis], p1_crossover[1, :, np.newaxis])))
+            offspring[i + 1] = create_offspring(offspring[i + 1], np.hstack((p2_crossover[0, :, np.newaxis],p2_crossover[1, :, np.newaxis])))
+        
         return offspring
 
     def uniform_crossover(

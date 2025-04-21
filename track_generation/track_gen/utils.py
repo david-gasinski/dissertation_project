@@ -1,5 +1,5 @@
 import numpy as np
-from typing import Unions
+from typing import Union
 import matplotlib.pyplot as plt
 import codecs
 import json 

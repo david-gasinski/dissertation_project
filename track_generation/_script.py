@@ -2,6 +2,9 @@ from track_gen.generators import convex_hull_generator
 from track_gen.scripts.plot_layout_curvature import plot_track_layout, n_plot_track_layout
 from track_gen.generators.track_generator import TrackGenerator
 
+import matplotlib.pyplot as plt
+
+
 import timeit
 
 if __name__ == "__main__":
@@ -53,16 +56,34 @@ if __name__ == "__main__":
     #"""
     #)
 #
-    #plot_track_layout(track)
+    #plot_track_layout(track)clear
 
     # do some funky stuff with timeit
     start = timeit.default_timer()
 
     generator = TrackGenerator(base_config['concave_hull'])
-    track = generator.generate_track(432532580)
+    track1 = generator.generate_track(16)
+    track2 = generator.generate_track(17)
+
+    offspring = generator.crossover([track1, track2])
+    
+    # plot the offspring
+    
+    fig = plt.figure()
+    
+    sub_plots = fig.subplots(2,2, squeeze=False)
+
+    # plot parents
+    sub_plots[0, 0].plot(track1.TRACK_COORDS[:, 0], track1.TRACK_COORDS[:, 1])
+    sub_plots[0, 1].plot(track2.TRACK_COORDS[:, 0], track2.TRACK_COORDS[:, 1])
+    
+    sub_plots[1, 0].plot(offspring[0].TRACK_COORDS[:, 0], offspring[0].TRACK_COORDS[:, 1])
+    sub_plots[1, 1].plot(offspring[1].TRACK_COORDS[:, 0], offspring[1].TRACK_COORDS[:, 1])
+
+    fig.show()
+    plt.show()
     
     end = timeit.default_timer() - start
     
-    n_plot_track_layout(track)
     
     print("Generation took {}".format(end))

@@ -12,9 +12,13 @@ load_dotenv()
 
 from common.notifications import NotifcationClient
 
-max_generations = 300
-min_generations = 1001
-generation_step_size = 700
+with open("config.json") as f:
+    config = json.load(f)['concave_hull']
+
+max_generations = config["ea_config"]["max_generations"]
+min_generations = config["ea_config"]["min_generations"]
+generation_step_size = config["ea_config"]["generation_step_size"]
+
 
 def save_track(track, data_path, img_path):
     json.dump(track.serialize(), codecs.open(data_path, 'w', encoding='utf-8'), 
@@ -30,13 +34,11 @@ def save_track(track, data_path, img_path):
     plt.savefig(img_path)
     plt.clf()
 
-with open("config.json") as f:
-    config = json.load(f)
 
-track_gen = track_generator.TrackGenerator(config['concave_hull'])
+track_gen = track_generator.TrackGenerator(config)
 noti = NotifcationClient(os.getenv("PUSHOVER_APP_KEY"), os.getenv("PUSHOVER_USER_KEY"))
 
-generation_path = "tracks/issue_40/{}"
+generation_path = config["ea_config"]["generation_path"]
 
 for i in range(min_generations, max_generations, generation_step_size):
     
@@ -48,9 +50,9 @@ for i in range(min_generations, max_generations, generation_step_size):
     
     genetic = algorithm.GeneticAlgorithm(
         track_gen,
-        2,
-        0.1,
-        100,
+        config["ea_config"]["tournament_size"],
+        config["ea_config"]["mutation_rate"],
+        config["ea_config"]["population"],
         i,
         crossover_type='uniform',
         save_generation=50,
