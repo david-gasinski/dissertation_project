@@ -54,7 +54,7 @@ for i in range(min_generations, max_generations, generation_step_size):
         config["ea_config"]["mutation_rate"],
         config["ea_config"]["population"],
         i,
-        crossover_type='uniform',
+        crossover_type=config["ea_config"]["crossover"],
         save_generation=50,
         default_dir=generation_path.format(i) 
     )

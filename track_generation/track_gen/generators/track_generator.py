@@ -13,6 +13,7 @@ import track_gen.bezier as bezier
 import concave_hull as ch
 import scipy.spatial as sp
 import numpy as np
+import matplotlib.pyplot as plt
 
 # Type imports
 if TYPE_CHECKING:
@@ -36,7 +37,8 @@ class TrackGenerator(abstract_track_generator.TrackGenerator):
         track = convex_hull_track.ConvexHullTrack(_num_points, seed)
 
         # generate new points and check if within threshold
-        points = self._within_threshold(self._initialise_points())
+        # points = self._within_threshold(self._initialise_points())
+        points = self._initialise_points()
         # generate hull points
         hull = self._concave_hull(points)
 
@@ -90,6 +92,11 @@ class TrackGenerator(abstract_track_generator.TrackGenerator):
         """
         Calculate the distance for all neighbouring points. If the distance is below the threshold, push the
         points apart.
+        
+        DEPRECATED
+        NO LONGER USED 
+        INSTEAD, FITNESS IS PUNISHED IF CONTROL_POINTS ARE TOO CLOSE
+        
         """
         threshold_dist = self.config["threshold_distance"]
 
@@ -102,14 +109,23 @@ class TrackGenerator(abstract_track_generator.TrackGenerator):
                 # distance
                 distance = np.linalg.norm(points[point] - points[point_next])
 
-                if distance < threshold_dist:
+                while distance < threshold_dist:
+
+                    # this method doesnt work if the distance is ZERO
+                    # so need to regenerate the point within boungs
+                    points = utils.TrackUtils.mutate_point(
+                        points, point, self.config["control_points"], self.seed
+                    )
+                    distance = np.linalg.norm(points[point] - points[point_next])
+
+
                     # calculate the vector from point[point] to points[point_next]
                     # normalise by magnitude
-                    norm_vec = (points[point] - points[point_next]) / distance
-                    distance_offset = (threshold_dist - distance) * norm_vec
+                    # norm_vec = (points[point] - points[point_next]) / distance
+                    # distance_offset = (threshold_dist - distance) * norm_vec
 
-                    # offset point
-                    points[point] += distance_offset
+                    ## offset point
+                    # points[point] += distance_offset
         return points
 
     def _concave_hull(self, points: np.ndarray) -> np.ndarray:
@@ -117,19 +133,31 @@ class TrackGenerator(abstract_track_generator.TrackGenerator):
         Calculates the concave hull of the given points. If the number of points within the concave hull is less than `num_points`,
         regenerate missing points.
         """
-
         concave_hull = ch.concave_hull_indexes(points, concavity=0, length_threshold=0)
         hull_points = points[concave_hull]
 
         x_bounds = self.config["x_bounds"]
         y_bounds = self.config["y_bounds"]
 
+        intersections = 0
+        
         while hull_points.shape[0] < self.config["control_points"]:
             # get all the indexes of points that arent part of concave hull
+            # OR already exist within it !!!! THATS THE KEY TO FIX THE BUG!!!
             # generate new points till concave hull covers all
             bad_points_mask = ~(
                 np.all(points[:, None] == hull_points, axis=-1).any(axis=1)
             )
+
+            # find any duplicate points (due to happen with crosover)
+            vals, inverse, count = np.unique(points,
+                                 return_inverse=True,
+                                 return_counts=True,
+                                 axis=0)
+            out = np.where(count[inverse] > 1)[0] 
+            
+            # index into bad_points_mark and replace duplicates
+            if out.size > 0: bad_points_mask[out] = True
 
             index = 0
             for bad_point in bad_points_mask:
@@ -145,14 +173,25 @@ class TrackGenerator(abstract_track_generator.TrackGenerator):
                         )
                     )
                 index += 1
-
+            intersections += 1
             # make sure points are above threshold
-            points = self._within_threshold(points)
+            # points = self._within_threshold(points)
+
             # calculate new concave hull  # get the concave hull
             concave_idx = ch.concave_hull_indexes(
-                points, concavity=0, length_threshold=0
+                points, concavity=1, length_threshold=0
             )
             hull_points = points[concave_idx]
+            
+            if intersections > 5:
+                fig = plt.figure()
+                subplots = fig.subplots(1,2, squeeze=False)
+                
+                subplots[0,0].scatter(hull_points[:, 0], hull_points[:, 1])
+                subplots[0,1].scatter(points[:, 0], points[:, 1])
+                fig.show()
+                plt.show()
+
 
         return hull_points
 
@@ -396,7 +435,7 @@ class TrackGenerator(abstract_track_generator.TrackGenerator):
             p2_crossover = np.where(
                 (pos_delta__p1 == pos_delta__p2)[:, np.newaxis], p2_geno, p1_geno
             ).T
-            
+
             offspring.append(
                 convex_hull_track.ConvexHullTrack(p1._control_points, p1.seed)
             )
@@ -407,17 +446,29 @@ class TrackGenerator(abstract_track_generator.TrackGenerator):
             # generate concave hull
             # calculaute control points
             # encode and calculate the rest
-            def create_offspring(track: abstract_track.Track, points: np.ndarray) -> abstract_track.Track:
+            def create_offspring(
+                track: abstract_track.Track, points: np.ndarray
+            ) -> abstract_track.Track:
                 hull = self._concave_hull(points)
-                
+
                 self._calculate_control_points(track, hull)
                 self._calc_track_params(track)
-                
+
                 return track
 
-            offspring[i] = create_offspring(offspring[i], np.hstack((p1_crossover[0, :, np.newaxis], p1_crossover[1, :, np.newaxis])))
-            offspring[i + 1] = create_offspring(offspring[i + 1], np.hstack((p2_crossover[0, :, np.newaxis],p2_crossover[1, :, np.newaxis])))
-        
+            offspring[i] = create_offspring(
+                offspring[i],
+                np.hstack(
+                    (p1_crossover[0, :, np.newaxis], p1_crossover[1, :, np.newaxis])
+                ),
+            )
+            offspring[i + 1] = create_offspring(
+                offspring[i + 1],
+                np.hstack(
+                    (p2_crossover[0, :, np.newaxis], p2_crossover[1, :, np.newaxis])
+                ),
+            )
+
         return offspring
 
     def uniform_crossover(
@@ -457,9 +508,11 @@ class TrackGenerator(abstract_track_generator.TrackGenerator):
             # pick between either
 
             for i in range(2):  # 2 offspring
-                offspring.append(convex_hull_track.ConvexHullTrack(
-                    p1._control_points, p1.seed if i == 1 else p2.seed
-                )) # create a new track
+                offspring.append(
+                    convex_hull_track.ConvexHullTrack(
+                        p1._control_points, p1.seed if i == 1 else p2.seed
+                    )
+                )  # create a new track
                 occupied_idx = []  # points which are already used
                 temp_offspring = []
 
@@ -488,7 +541,8 @@ class TrackGenerator(abstract_track_generator.TrackGenerator):
                 # convert to numpy array
                 temp_offspring = np.asanyarray(temp_offspring)
 
-                offspring[idx + i].encode_control_points(temp_offspring[:, 0, np.newaxis],
+                offspring[idx + i].encode_control_points(
+                    temp_offspring[:, 0, np.newaxis],
                     temp_offspring[:, 1, np.newaxis],
                     temp_offspring[:, 2, np.newaxis],
                     temp_offspring[:, 3, np.newaxis],
@@ -498,7 +552,7 @@ class TrackGenerator(abstract_track_generator.TrackGenerator):
                 )
 
                 # recalculate other parameters and add offspring
-                self._calc_track_params(offspring[idx + i])    
+                self._calc_track_params(offspring[idx + i])
         return offspring
 
     def mutate(self, track: abstract_track.Track) -> abstract_track.Track:
@@ -546,32 +600,51 @@ class TrackGenerator(abstract_track_generator.TrackGenerator):
 
         total_segments = track.LENGTH
         c = []  # track diversity, as a percent of the track within each bin
+        control_points = np.hstack(
+            (
+                track.CONTROL_POINTS[:, 0, np.newaxis],
+                track.CONTROL_POINTS[:, 1, np.newaxis],
+            )
+        )
 
         lower_bin = self.curvature_bins[0][0]
-        upper_bin = self.curvature_bins[-1][1]       
-        
+        upper_bin = self.curvature_bins[-1][1]
+
         for databin in self.curvature_bins:
             bin_segments = 0
             curv_min = databin[0]
             curv_max = databin[1]
-            
+
             # analyse
             for segment in track.CURVATURE_PROFILE:
                 # count the segments within the current bin
-                if curv_min <= segment < curv_max: bin_segments += 1 
-                
-                # if the segment is outside the bin range, penalise 
-                if lower_bin > segment or segment > upper_bin: penalty += 20
+                if curv_min <= segment < curv_max:
+                    bin_segments += 1
+
+                # if the segment is outside the bin range, penalise
+                if lower_bin > segment or segment > upper_bin:
+                    penalty += 20
 
             # ignore bins that do not contain any track segments
-            if bin_segments != 0: c.append(bin_segments / total_segments)
+            if bin_segments != 0:
+                c.append(bin_segments / total_segments)
 
         # calculate the entropy of curvature and normalise for 100
         c = np.asanyarray(c)  # convert to numpy array
         entropy = -np.sum(c * np.log2(c))
 
-        fitness = (fitness * entropy) - (
-            50 * utils.LinearAlgebra.intersection_bezier_curve(track.TRACK_COORDS)
+        fitness = (
+            (fitness * entropy)
+            + (
+                self.config["fitness"]["intersection"]
+                * utils.LinearAlgebra.intersection_bezier_curve(track.TRACK_COORDS) # punish track intersection
+            )
+            + (
+                self.config["fitness"]["below_threshold"]
+                * utils.LinearAlgebra.below_threshold_dist(
+                    control_points, self.config["threshold_distance"] # punish points which are below the threshold distance (i.e. too close)
+                )
+            )
         )
         track.encode_fitness(fitness)
 

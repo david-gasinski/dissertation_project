@@ -18,6 +18,24 @@ def clamp(value: int, min: int, max: int):
 class LinearAlgebra:
     
     @staticmethod
+    def below_threshold_dist(points: np.ndarray, threshold_dist: float) -> int:
+        below = 0
+        for point in range(points.shape[0]):
+            for point_next in range(points.shape[0]):
+
+                if point == point_next:
+                    continue
+
+                # distance
+                distance = np.linalg.norm(points[point] - points[point_next])
+                # 
+                if distance < threshold_dist:
+                    below += 1 
+                
+                
+        return below
+    
+    @staticmethod
     def linear_eq(slope: float, b_x: float, y_intercept: float, i_min: float, i_max: float, i: float) -> float:
         t = np.linspace(i_min, i_max, i)
         
@@ -209,7 +227,36 @@ class PolynomialAlgebra:
             roots = np.asanyarray([0.0,0.0])
         return roots
   
+class TrackUtils:
     
+    @staticmethod
+    def mutate_point(points: np.ndarray, point_index: int, num_points: dict, seed: np.random.Generator) -> np.ndarray:
+        p_idx = clamp(point_index + 1, 0, num_points)
+        n_idx = clamp(point_index - 1, 0, num_points)
+                
+        # calculate the x and y bounds
+        x_range = points[n_idx][0] >= points[p_idx][0]
+        x_bounds = [
+            points[p_idx][0] if x_range else points[n_idx][0],
+            points[p_idx][0] if not x_range else points[n_idx][0],
+        ]
+
+        y_range = np.any(points[n_idx][1] >= points[p_idx][1])
+
+        y_bounds = [
+            points[p_idx][1] if y_range else points[n_idx][1],
+            points[p_idx][1] if not y_range else points[n_idx][1],
+        ]
+
+        # generate new coordinate
+        x_coords = seed.uniform(x_bounds[0], x_bounds[1], 1)
+        y_coords = seed.uniform(y_bounds[0], y_bounds[1], 1)
+
+        # replace old point
+        points[point_index] = np.asanyarray([x_coords, y_coords]).T
+        
+        return points
+   
 class PerlinNoise:
     
     # noise functions

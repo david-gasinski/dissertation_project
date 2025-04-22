@@ -97,9 +97,32 @@ class GeneticAlgorithm:
             start = timeit.default_timer()
             if generations == 0:  # first generation
                 self.initialise_population()
+                
+            # calculate and sort fitness
+            self.calculate_fitness()
 
             self.fitness[:, 2].argsort()
 
+            # save tracks
+            if self.save_generation:
+                # get the top tracks
+                highest_fitness = self.fitness[:self.save_generation]
+                
+                # create the folder structure
+                try:
+                    os.makedirs(os.path.join(self.default_dir, f'{generations}/'))
+                except Exception as e:
+                    print("Couldnt make dir, idek why")
+                
+                for track in highest_fitness:
+                    track_obj = self.population[int(track[0])]
+                    
+                    utils.save_track( # save track
+                        track_obj,
+                        os.path.join(self.default_dir, f"{generations}/{track_obj.fitness()} {track_obj.seed} {track[0]}.json"),
+                        os.path.join(self.default_dir, f"{generations}/{track_obj.fitness()} {track_obj.seed} {track[0]}.png")                        
+                    )
+                    
             # do tournament selection
             parents = self.tournament_selection(self.tournament_size_k)
 
@@ -126,34 +149,12 @@ class GeneticAlgorithm:
                 self.fitness[track, 0] = track
                 self.fitness[track, 1] = self.population[track].seed
 
-            # calculate and sort fitness
-            self.calculate_fitness()
-
             # save fitness
             self.average_fitness[generations] = np.average(self.fitness[:, 2])
 
-            # print(f"Generation {generations}. Average fitness is {self.average_fitness[generations]}. Time to run {timeit.default_timer() - start}")
+            print(f"Generation {generations}. Average fitness is {self.average_fitness[generations]}. Time to run {timeit.default_timer() - start}")
             self.runtime[generations] = timeit.default_timer() - start
             
-            if self.save_generation:
-                # get the top tracks
-                highest_fitnes = self.fitness[:self.save_generation]
-                
-                # create the folder structure
-                try:
-                    os.makedirs(os.path.join(self.default_dir, f'{generations}/'))
-                except Exception as e:
-                    print("Couldnt make dir, idek why")
-                
-                for track in highest_fitnes:
-                    track_obj = self.population[track[0]]
-                    
-                    utils.save_track( # save track
-                        track_obj,
-                        os.path.join(self.default_dir, f"{generations}/{track.fitness()} {track.seed} {track[0]}.json"),
-                        os.path.join(self.default_dir, f"{generations}/{track.fitness()} {track.seed} {track[0]}.png")                        
-                    )
-                
             generations += 1
 
         # as a final pass, calculate fitness and return population
