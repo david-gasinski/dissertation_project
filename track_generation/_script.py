@@ -65,7 +65,7 @@ if __name__ == "__main__":
     track1 = generator.generate_track(16)
     track2 = generator.generate_track(17)
 
-    offspring = generator.crossover([track1, track2])
+    offspring = generator.uniform_crossover([track1, track2])
     
     # plot the offspring
     

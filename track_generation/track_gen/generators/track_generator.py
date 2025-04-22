@@ -182,17 +182,7 @@ class TrackGenerator(abstract_track_generator.TrackGenerator):
                 points, concavity=1, length_threshold=0
             )
             hull_points = points[concave_idx]
-            
-            if intersections > 5:
-                fig = plt.figure()
-                subplots = fig.subplots(1,2, squeeze=False)
-                
-                subplots[0,0].scatter(hull_points[:, 0], hull_points[:, 1])
-                subplots[0,1].scatter(points[:, 0], points[:, 1])
-                fig.show()
-                plt.show()
-
-
+        
         return hull_points
 
     def _calculate_control_points(
@@ -422,7 +412,7 @@ class TrackGenerator(abstract_track_generator.TrackGenerator):
                     utils.LinearAlgebra.line_eq(crossover_slope, pgenotypes[0][0]),
                     utils.LinearAlgebra.line_eq(crossover_slope, pgenotypes[1][0]),
                 ]
-
+                                                
                 pos_delta__p1.append(False if p_ly[0] > pgenotypes[0][1] else True)
                 pos_delta__p2.append(False if p_ly[1] > pgenotypes[1][1] else True)
 
@@ -431,10 +421,10 @@ class TrackGenerator(abstract_track_generator.TrackGenerator):
 
             p1_crossover = np.where(
                 (pos_delta__p1 == pos_delta__p2)[:, np.newaxis], p1_geno, p2_geno
-            ).T
+            )
             p2_crossover = np.where(
                 (pos_delta__p1 == pos_delta__p2)[:, np.newaxis], p2_geno, p1_geno
-            ).T
+            )
 
             offspring.append(
                 convex_hull_track.ConvexHullTrack(p1._control_points, p1.seed)
@@ -446,26 +436,18 @@ class TrackGenerator(abstract_track_generator.TrackGenerator):
             # generate concave hull
             # calculaute control points
             # encode and calculate the rest
-            def create_offspring(
-                track: abstract_track.Track, points: np.ndarray
-            ) -> abstract_track.Track:
-                hull = self._concave_hull(points)
 
-                self._calculate_control_points(track, hull)
-                self._calc_track_params(track)
-
-                return track
-
-            offspring[i] = create_offspring(
+            offspring[i] = self._create_offspring(
                 offspring[i],
                 np.hstack(
-                    (p1_crossover[0, :, np.newaxis], p1_crossover[1, :, np.newaxis])
+                    (p1_crossover[:, 0, np.newaxis], p1_crossover[:, 1, np.newaxis])
                 ),
             )
-            offspring[i + 1] = create_offspring(
+            
+            offspring[i + 1] = self._create_offspring(
                 offspring[i + 1],
                 np.hstack(
-                    (p2_crossover[0, :, np.newaxis], p2_crossover[1, :, np.newaxis])
+                    (p2_crossover[:, 0, np.newaxis], p2_crossover[:, 1, np.newaxis])
                 ),
             )
 
@@ -475,9 +457,9 @@ class TrackGenerator(abstract_track_generator.TrackGenerator):
         self, parents: list[abstract_track.Track]
     ) -> list[abstract_track.Track]:
         """
-        Performs single-point crossover on pairs of parents
+        Performs uniform crossover on pairs of parents
         """
-
+        
         offspring = []
         _parents = len(parents)
 
@@ -494,65 +476,29 @@ class TrackGenerator(abstract_track_generator.TrackGenerator):
 
             rng = np.random.default_rng(seed=p1.seed)
 
-            # get the coordinates for each parent
-            p1_xy = np.hstack((p1_geno[:, 0, np.newaxis], p1_geno[:, 1, np.newaxis]))
-            p2_xy = np.hstack((p2_geno[:, 0, np.newaxis], p2_geno[:, 1, np.newaxis]))
-
-            # generate distance matrix between point 1 and point 2
-            dist = sp.distance.cdist(p1_xy, p2_xy, "euclidean")
-
-            # for each offspring
-            # loop from 1 to 10
-            # select the first point from p1
-            # select closest point from p2
-            # pick between either
-
-            for i in range(2):  # 2 offspring
-                offspring.append(
-                    convex_hull_track.ConvexHullTrack(
-                        p1._control_points, p1.seed if i == 1 else p2.seed
-                    )
-                )  # create a new track
-                occupied_idx = []  # points which are already used
-                temp_offspring = []
-
-                for j in range(p1._control_points):
-                    dist_vector = dist[j]
-                    sorted_idx = dist_vector.argsort()
-                    min_value = sorted_idx[0]  # sort to get closest points
-
-                    x = 1
-                    while (
-                        min_value in occupied_idx
-                    ):  # make sure non of the points are already used
-                        if x == len(sorted_idx):
-                            # if all occupied just use closest point
-                            min_value = sorted_idx[0]
-                            break
-                        min_value = sorted_idx[i]
-
-                    # randomly select a point for the offspring
-                    prob = rng.random()
-
-                    temp_offspring.append(
-                        p1_geno[j] if prob > 0.5 else p2_geno[min_value]
-                    )
-
-                # convert to numpy array
-                temp_offspring = np.asanyarray(temp_offspring)
-
-                offspring[idx + i].encode_control_points(
-                    temp_offspring[:, 0, np.newaxis],
-                    temp_offspring[:, 1, np.newaxis],
-                    temp_offspring[:, 2, np.newaxis],
-                    temp_offspring[:, 3, np.newaxis],
-                    temp_offspring[:, 4, np.newaxis],
-                    temp_offspring[:, 5, np.newaxis],
-                    temp_offspring[:, 6, np.newaxis],
-                )
-
-                # recalculate other parameters and add offspring
-                self._calc_track_params(offspring[idx + i])
+            # define the selection probability 
+            selection_prob = 0.5 # 50% as both parents have an equal chance of being selected
+            
+            # generate a selection vector
+            selection_vec = np.random.random(size=p1._control_points) 
+            
+            # generate a mask based on the selection vector
+            selection_mask = selection_vec <= selection_prob
+            
+            # perform the crossover
+            # take TRUE values from p1 and FALSE from p2 -> first offspring
+            p1_crossover = np.where(selection_mask[:, np.newaxis], p1_geno, p2_geno) 
+            
+            # take FALSE values from p1 and TRUE from p2 -> second offspring
+            p2_crossover = np.where(selection_mask[:, np.newaxis], p2_geno, p1_geno) 
+            
+            # create two offspring objects and encode new control points
+            for i in range(2):
+                offspring.append(self._create_offspring(
+                    convex_hull_track.ConvexHullTrack(p1._control_points, p1.seed if i % 2 else p2.seed),
+                    p1_crossover[:, 0:2] if i % 2 else p2_crossover[:, 0:2]
+                ))
+            
         return offspring
 
     def mutate(self, track: abstract_track.Track) -> abstract_track.Track:
@@ -592,6 +538,17 @@ class TrackGenerator(abstract_track_generator.TrackGenerator):
 
         # calculate BEZIER_SEGMENTS, CURVATURE_PROFILE, TRACK_COORDS, LENGTH
         self._calc_track_params(track)
+
+    def _create_offspring(
+                self, track: abstract_track.Track, points: np.ndarray
+            ) -> abstract_track.Track:
+                hull = self._concave_hull(points)
+
+                self._calculate_control_points(track, hull)
+                self._calc_track_params(track)
+
+                return track
+
 
     def fitness(self, track: abstract_track.Track) -> float:
         # calculate the percent of the track that belongs in each bin
