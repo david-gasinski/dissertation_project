@@ -83,12 +83,6 @@ track.link_obj()
 #bpy.ops.mesh.primitive_plane_add(size=track_width, enter_editmode=False, align='WORLD', location=(0, 0, 0), scale=(1, 1, 1))
 bpy.ops.object.editmode_toggle()
 
-#bpy.ops.mesh.loopcut_slide(MESH_OT_loopcut={"number_cuts": 2, "smoothness":0, "falloff":'INVERSE_SQUARE', "object_index":0, "edge_index":2, "mesh_select_mode_init":(False, True, False)}, TRANSFORM_OT_edge_slide={"value":0, "single_side":False, "use_even":False, "flipped":False, "use_clamp":True, "mirror":True, "snap":False, "snap_elements":{'INCREMENT'}, "use_snap_project":False, "snap_target":'CLOSEST', "use_snap_self":True, "use_snap_edit":True, "use_snap_nonedit":True, "use_snap_selectable":False, "snap_point":(0, 0, 0), "correct_uv":True, "release_confirm":False, "use_accurate":False})
-#bpy.ops.transform.resize(value=(1, kerb_resize, 1), orient_type='GLOBAL', orient_matrix=((1, 0, 0), (0, 1, 0), (0, 0, 1)), orient_matrix_type='GLOBAL', constraint_axis=(False, True, False), mirror=True, use_proportional_edit=False, proportional_edit_falloff='SMOOTH', proportional_size=1, use_proportional_connected=False, use_proportional_projected=False, snap=False, snap_elements={'INCREMENT'}, use_snap_project=False, snap_target='CLOSEST', use_snap_self=True, use_snap_edit=True, use_snap_nonedit=True, use_snap_selectable=False)
-
-#bpy.ops.object.modifier_add(type='ARRAY')
-#bpy.context.object.modifiers["Array"].use_merge_vertices = True
-#bpy.ops.mesh.loopcut_slide(MESH_OT_loopcut={"number_cuts": int(track_width / segment_length), "smoothness":0, "falloff":'INVERSE_SQUARE', "object_index":0, "edge_index":1, "mesh_select_mode_init":(True, False, False)}, TRANSFORM_OT_edge_slide={"value":-0.00307692, "single_side":False, "use_even":False, "flipped":False, "use_clamp":True, "mirror":True, "snap":False, "snap_elements":{'INCREMENT'}, "use_snap_project":False, "snap_target":'CLOSEST', "use_snap_self":True, "use_snap_edit":True, "use_snap_nonedit":True, "use_snap_selectable":False, "snap_point":(0, 0, 0), "correct_uv":True, "release_confirm":False, "use_accurate":False})
 
 # THIS
 bpy.ops.object.modifier_add(type='CURVE')
@@ -97,23 +91,6 @@ bpy.context.object.modifiers["Curve"].object = bpy.data.objects[name] # replace 
 # need to move object to first index in track
 # toggle again
 bpy.ops.object.editmode_toggle()
-
-# load materials from blend files
-# using a relative path
-#mat_paths = [
-#        r'C:\\Users\\dgasi\\Desktop\\workspace\\environment_shaping_with_ac\\dissertation_project\\track_generation\\mesh_gen\\resources\\road_kerb\\asphalt_kerb_4k.blend',
-#        r'C:\\Users\\dgasi\\Desktop\\workspace\\environment_shaping_with_ac\\dissertation_project\\track_generation\\mesh_gen\\resources\\road_surface\\asphalt_track_4k.blend'
-#    ]
-#material_names = ['asphalt_kerb_4k', 'asphalt_track_4k']
-#
-#for path in mat_paths:
-#    with bpy.data.libraries.load(path) as (data_from, data_to):
-#        data_to.materials = data_from.materials
-#
-## apply materials to faces
-#for material in material_names:
-#    
-#    bpy.data.materials.get()
 
 
 # export to blend file location

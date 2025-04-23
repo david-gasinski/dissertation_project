@@ -99,7 +99,7 @@ bpy.context.object.modifiers["Curve"].object = bpy.data.objects[name] # replace 
 bpy.context.object.modifiers["Array"].count = track_obj['length']
 
 filepath = os.path.join(config['blend'], f"{name}.blend") 
+
 # save blend file
 bpy.ops.wm.save_as_mainfile(filepath=filepath)
 
-# append to config and save
