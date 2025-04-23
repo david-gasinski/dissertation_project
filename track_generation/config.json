@@ -16,7 +16,7 @@
         "width": 800,
         "height": 800,
         "control_point_offset": 30,
-        "threshold_distance": 40,
+        "threshold_distance": 30,
         "slope_offset": {
             "high": 0.01,
             "low": -0.01
@@ -24,9 +24,9 @@
         "render": false,
         "curvature_bin_dataset": "datasets/scripts/output/data_bins/curvature_bins.json",
         "ea_config": {
-            "max_generations": 301,
+            "max_generations": 310,
             "min_generations": 300,
-            "generation_step_size": 21,
+            "generation_step_size": 1,
             "tournament_size": 2,
             "mutation_rate": 0.1,
             "population": 100,
