@@ -6,33 +6,33 @@
         "control_points": 10,
         "bezier_interval": 0.1,
         "x_bounds": {
-            "low": -200,
-            "high": 200
+            "low": -400,
+            "high": 400
         },
         "y_bounds": {
-            "low": -200,
-            "high": 200
+            "low": -400,
+            "high": 400
         },
-        "width": 400,
-        "height": 400,
-        "control_point_offset": 20,
-        "threshold_distance": 20,
+        "width": 800,
+        "height": 800,
+        "control_point_offset": 30,
+        "threshold_distance": 40,
         "slope_offset": {
-            "high": 0.1,
-            "low": -0.1
+            "high": 0.01,
+            "low": -0.01
         },
-        "render": true,
+        "render": false,
         "curvature_bin_dataset": "datasets/scripts/output/data_bins/curvature_bins.json",
         "ea_config": {
-            "max_generations": 501,
+            "max_generations": 301,
             "min_generations": 300,
-            "generation_step_size": 202,
+            "generation_step_size": 21,
             "tournament_size": 2,
             "mutation_rate": 0.1,
             "population": 100,
             "crossover": "uniform",
             "save_generations": 50,
-            "generation_path": "tracks/issue_47/{}"
+            "generation_path": "tracks/issue_50/{}"
         },
         "fitness": {
             "intersection": -50,

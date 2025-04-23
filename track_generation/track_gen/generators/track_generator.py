@@ -53,7 +53,7 @@ class TrackGenerator(abstract_track_generator.TrackGenerator):
     def _track_length(self, track: abstract_track.Track) -> abstract_track.Track:
         track.encode_track_length(np.sum(track.BEZIER_SEGMENTS[:, 8]))
 
-    def _track_coordinates(self, track: abstract_track.Track) -> abstract_track.Track:
+    def _track_coordinates(self, track: abstract_track.Track, interval: float = 0.1) -> abstract_track.Track:
         # for each bezier segment
         coordinates = []
         offset_coords = []
@@ -62,7 +62,7 @@ class TrackGenerator(abstract_track_generator.TrackGenerator):
         for segment in track.BEZIER_SEGMENTS:
             wx = segment[0:7:2]
             wy = segment[1:8:2]
-            segment = self._bezier.generate_bezier(self._bezier.CUBIC, wx, wy, 0.1)
+            segment = self._bezier.generate_bezier(self._bezier.CUBIC, wx, wy, interval)
             coordinates.extend(segment)
             offset_coords.extend(self._bezier.offset_curve(offset, segment, wx, wy))
 

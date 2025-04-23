@@ -169,7 +169,8 @@ class Track():
         return {
             "seed": self.seed.tolist(),
             "fitness" : self._fitness,
-            "genotype": genotype_list
+            "genotype": genotype_list,
+            "length": self.LENGTH
         }
         
     

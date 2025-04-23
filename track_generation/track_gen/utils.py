@@ -339,6 +339,22 @@ def read_np(path: str) -> None:
     py_arr = json.loads(obj_text) # python arr
     return np.array(py_arr)
 
+def save_np(arr: np.ndarray, path: str) -> None:
+    json.dump(arr.tolist(), codecs.open(path, 'w', encoding='utf-8'), 
+          separators=(',', ':'), 
+          sort_keys=True, 
+          indent=4)
+    
+def read_json(path: str) -> None:
+    obj_text = codecs.open(path, 'r', encoding='utf-8').read()
+    return json.loads(obj_text) 
+
+def save_json(config: dict, path: str) -> None:
+    json.dump(config, codecs.open(path, 'w', encoding='utf-8'), 
+          separators=(',', ':'), 
+          sort_keys=True, 
+          indent=4)
+    
 def save_track(track, data_path, img_path):
     """
         Exports a given track to a json file and a .png image

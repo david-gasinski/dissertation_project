@@ -1,6 +1,7 @@
 from track_gen.generators import convex_hull_generator
 from track_gen.scripts.plot_layout_curvature import plot_track_layout, n_plot_track_layout
 from track_gen.generators.track_generator import TrackGenerator
+import track_gen.utils
 
 import matplotlib.pyplot as plt
 
@@ -67,6 +68,12 @@ if __name__ == "__main__":
 
     offspring = generator.uniform_crossover([track1, track2])
     
+    # save the first track coords
+    track_gen.utils.save_np(
+        track1.TRACK_COORDS,
+        r'test_track.json'
+    )
+
     # plot the offspring
     
     fig = plt.figure()
