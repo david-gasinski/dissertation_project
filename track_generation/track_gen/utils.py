@@ -18,7 +18,7 @@ def clamp(value: int, min: int, max: int):
 class LinearAlgebra:
     
     @staticmethod
-    def below_threshold_dist(points: np.ndarray, threshold_dist: float) -> int:
+    def below_threshold_dist(points: np.ndarray, threshold_dist: float) -> float:
         below = 0
         for point in range(points.shape[0]):
             for point_next in range(points.shape[0]):
@@ -32,8 +32,7 @@ class LinearAlgebra:
                 if distance < threshold_dist:
                     below += 1 
                 
-                
-        return below
+        return below / 2 # divide by 2 as each threshold is counted twice
     
     @staticmethod
     def linear_eq(slope: float, b_x: float, y_intercept: float, i_min: float, i_max: float, i: float) -> float:

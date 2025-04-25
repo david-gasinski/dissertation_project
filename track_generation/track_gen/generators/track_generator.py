@@ -19,7 +19,6 @@ import matplotlib.pyplot as plt
 if TYPE_CHECKING:
     from track_gen.abstract import abstract_track
 
-
 class TrackGenerator(abstract_track_generator.TrackGenerator):
 
     def __init__(self, config: dict) -> None:
@@ -588,7 +587,8 @@ class TrackGenerator(abstract_track_generator.TrackGenerator):
 
         # calculate the entropy of curvature and normalise for 100
         c = np.asanyarray(c)  # convert to numpy array
-        entropy = -np.sum(c * np.log2(c))
+        #entropy = -np.sum(c * np.log2(c))
+        entropy = np.sum(c)
 
         fitness = (
             (fitness * entropy)
