@@ -83,8 +83,9 @@ class TrackLine():
 
 config = read_config()
 track_obj = read_np(config['track'])            
-            
+   
 track_coords = track_obj['track_coords'] # read the track from the defined config 
+#track = read_np(r"C:\Users\dgasi\Desktop\workspace\environment_shaping_with_ac\dissertation_project\track_generation\test_track.json")
 
 name = "track_path"
 track = TrackLine(name, track_coords, closed=True)
@@ -95,10 +96,13 @@ track.link_obj()
 bpy.ops.object.modifier_add(type='CURVE')
 bpy.context.object.modifiers["Curve"].object = bpy.data.objects[name] # replace with name
 
-# update the mesh count in array modifier
-bpy.context.object.modifiers["Array"].count = track_obj['length']
+# to array modifier
+# select the option "fit to curve"
+# and append object
+bpy.context.object.modifiers["Array"].fit_type = 'FIT_CURVE' # change type to fit curve
+bpy.context.object.modifiers["Array"].curve = bpy.data.objects[name] # assign curve
 
-filepath = os.path.join(config['blend'], f"{name}.blend") 
+filepath = os.path.join(os.path.join(config['blend']), f"{name}.blend") 
 
 # save blend file
 bpy.ops.wm.save_as_mainfile(filepath=filepath)

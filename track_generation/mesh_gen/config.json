@@ -1,6 +1,8 @@
 {
-    "track_path" : "",
-    "name": "",
-    "blend": "",
+    "track" : {
+        "track_coords" : []
+    },
+    "name": "track_mesh",
+    "blend": "C:\\Users\\dgasi\\Desktop\\workspace\\environment_shaping_with_ac\\dissertation_project\\track_generation\\mesh_gen\\blend",
     "fbx" : ""
 }

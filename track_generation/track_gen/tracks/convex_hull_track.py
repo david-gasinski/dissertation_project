@@ -1,10 +1,9 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
-
 from track_gen import utils
-import pygame
-
 from track_gen.abstract import abstract_track
+
+import pygame
 
 class ConvexHullTrack(abstract_track.Track):
     
