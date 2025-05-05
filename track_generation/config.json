@@ -24,7 +24,7 @@
         "render": false,
         "curvature_bin_dataset": "datasets/scripts/output/data_bins/curvature_bins.json",
         "ea_config": {
-            "max_generations": 310,
+            "max_generations": 301,
             "min_generations": 300,
             "generation_step_size": 1,
             "tournament_size": 2,
@@ -32,7 +32,7 @@
             "population": 100,
             "crossover": "uniform",
             "save_generations": 50,
-            "generation_path": "tracks/issue_50/{}"
+            "generation_path": "tracks/issue_53/{}"
         },
         "fitness": {
             "intersection": -50,

@@ -503,37 +503,45 @@ class TrackGenerator(abstract_track_generator.TrackGenerator):
     def mutate(self, track: abstract_track.Track) -> abstract_track.Track:
         mutate_point = self.seed.integers(0, self.config["control_points"], size=1)
 
-        p_idx = utils.clamp(mutate_point + 1, 0, self.config["control_points"])
-        n_idx = utils.clamp(mutate_point - 1, 0, self.config["control_points"])
+        #p_idx = utils.clamp(mutate_point + 1, 0, self.config["control_points"])
+        #n_idx = utils.clamp(mutate_point - 1, 0, self.config["control_points"])
 
         track_geno = track.get_genotype()
         track_points = np.hstack(
             (track_geno[:, 0, np.newaxis], track_geno[:, 1, np.newaxis])
         )
 
-        # calculate the x and y bounds
-        x_range = track_points[n_idx][0][0] >= track_points[p_idx][0][0]
-        x_bounds = [
-            track_points[p_idx][0][0] if x_range else track_points[n_idx][0][0],
-            track_points[p_idx][0][0] if not x_range else track_points[n_idx][0][0],
-        ]
+        ## calculate the x and y bounds
+        #x_range = track_points[n_idx][0][0] >= track_points[p_idx][0][0]
+        #x_bounds = [
+        #    track_points[p_idx][0][0] if x_range else track_points[n_idx][0][0],
+        #    track_points[p_idx][0][0] if not x_range else track_points[n_idx][0][0],
+        #]
 
-        y_range = np.any(track_points[n_idx][0][1] >= track_points[p_idx][0][1])
+        #y_range = np.any(track_points[n_idx][0][1] >= track_points[p_idx][0][1])
 
-        y_bounds = [
-            track_points[p_idx][0][1] if y_range else track_points[n_idx][0][1],
-            track_points[p_idx][0][1] if not y_range else track_points[n_idx][0][1],
-        ]
+        #y_bounds = [
+        #    track_points[p_idx][0][1] if y_range else track_points[n_idx][0][1],
+        #    track_points[p_idx][0][1] if not y_range else track_points[n_idx][0][1],
+        #]
+
+        # generate new coordiantes
+        x_coords = self.seed.uniform(self.config['x_bounds']['low'], self.config['x_bounds']['high'], 1)
+        y_coords = self.seed.uniform(self.config['y_bounds']['low'], self.config['y_bounds']['high'], 1) 
 
         # generate new coordinate
-        x_coords = self.seed.uniform(x_bounds[0], x_bounds[1], 1)
-        y_coords = self.seed.uniform(y_bounds[0], y_bounds[1], 1)
+        #x_coords = self.seed.uniform(x_bounds[0], x_bounds[1], 1)
+        #y_coords = self.seed.uniform(y_bounds[0], y_bounds[1], 1)
+        
+        # generate concave hull
 
         # replace old point
         track_points[mutate_point] = np.asanyarray([x_coords, y_coords]).T
 
+        hull = self._concave_hull(track_points)
+        
         # calculate and encode the control points
-        self._calculate_control_points(track, track_points)
+        self._calculate_control_points(track, hull)
 
         # calculate BEZIER_SEGMENTS, CURVATURE_PROFILE, TRACK_COORDS, LENGTH
         self._calc_track_params(track)
@@ -587,11 +595,14 @@ class TrackGenerator(abstract_track_generator.TrackGenerator):
 
         # calculate the entropy of curvature and normalise for 100
         c = np.asanyarray(c)  # convert to numpy array
-        #entropy = -np.sum(c * np.log2(c))
-        entropy = np.sum(c)
+        entropy = -np.sum(c * np.log2(c))
+        track_validity = np.sum(c)
 
+        score = (entropy * 0.5) + (track_validity * 0.5) # weighted score
+        # max score is (4 * 0.5) + (1 * 0.5)  = 2.5 or 250 fitness
+        
         fitness = (
-            (fitness * entropy)
+            (fitness * score)
             + (
                 self.config["fitness"]["intersection"]
                 * utils.LinearAlgebra.intersection_bezier_curve(track.TRACK_COORDS) # punish track intersection

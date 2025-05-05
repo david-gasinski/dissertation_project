@@ -40,6 +40,9 @@ noti = NotifcationClient(os.getenv("PUSHOVER_APP_KEY"), os.getenv("PUSHOVER_USER
 
 generation_path = config["ea_config"]["generation_path"]
 
+if min_generations == max_generations:
+    pass
+
 for i in range(min_generations, max_generations, generation_step_size):
     
     # create the folder structure

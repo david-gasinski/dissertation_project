@@ -4,25 +4,16 @@ import codecs
 import json
 import os
 
-CONFIG_PATH = ""
+CONFIG_PATH = "C:\\Users\\dgasi\\Desktop\\workspace\\environment_shaping_with_ac\\dissertation_project\\track_generation\\mesh_gen\\config.json"
 
-def read_np(path: str) -> None:
-    """
-        Open a file containg a serialized numpy array within
-        Load the numpy array and return 
-    """
-    obj_text = codecs.open(path, 'r', encoding='utf-8').read()
-    py_arr = json.loads(obj_text) # python arr
-    return np.array(py_arr)
-
-def read_config() -> dict:
-    config = codecs.open(CONFIG_PATH, 'r', encoding='utf-8').read()
+def read_config(path: str) -> dict:
+    config = codecs.open(path, 'r', encoding='utf-8').read()
     return json.loads(config)
 
-def save_config(config: dict) -> None:
+def save_config(config: dict, path: str) -> None:
     json.dump(
         config,
-        codecs.open(CONFIG_PATH, 'w', encoding='utf-8'),
+        codecs.open(path, 'w', encoding='utf-8'),
             separators=(',', ':'),
             sort_keys=True,
             indent=4
@@ -81,27 +72,77 @@ class TrackLine():
             c[i::l] = arg
         return c
 
-config = read_config()
-track_obj = read_np(config['track'])            
-   
-track_coords = track_obj['track_coords'] # read the track from the defined config 
-#track = read_np(r"C:\Users\dgasi\Desktop\workspace\environment_shaping_with_ac\dissertation_project\track_generation\test_track.json")
+config = read_config(CONFIG_PATH)
+track_conf = read_config(config['track'])     # read the track from the defined config 
 
+track_coords = np.asanyarray(track_conf['track_coords'])
 name = "track_path"
 track = TrackLine(name, track_coords, closed=True)
 track.create_spline()
 track.link_obj()
 
 # add curve modifier and append curve mesh
-bpy.ops.object.modifier_add(type='CURVE')
-bpy.context.object.modifiers["Curve"].object = bpy.data.objects[name] # replace with name
+objects = ["1GRASS_ground", "2ROAD_track", "3KERB_kerb"]
 
-# to array modifier
-# select the option "fit to curve"
-# and append object
-bpy.context.object.modifiers["Array"].fit_type = 'FIT_CURVE' # change type to fit curve
-bpy.context.object.modifiers["Array"].curve = bpy.data.objects[name] # assign curve
+curve = bpy.data.objects[name]
+for obj in objects:
+    bpy.context.view_layer.objects.active = bpy.data.objects[obj]
 
+    # create curve modifier
+    bpy.ops.object.modifier_add(type='CURVE')
+    bpy.context.object.modifiers["Curve"].object = bpy.data.objects[name] # replace with name
+    
+    # change curve modifer to FIT_CURVE flag
+    bpy.context.object.modifiers["Array"].fit_type = 'FIT_CURVE' # change type to fit curve
+    
+    # assign curve to modifier
+    bpy.context.object.modifiers["Array"].curve = curve
+    
+    # Assign decimate modifier to reduce face count
+    # but only onto ground mesh or kerb
+    if obj == "1GRASS_ground":
+        bpy.ops.object.modifier_add(type='DECIMATE')
+        bpy.context.object.modifiers["Decimate"].ratio = 0.075
+    elif obj == "3KERB_track":
+        bpy.ops.object.modifier_add(type='DECIMATE')
+        bpy.context.object.modifiers["Decimate"].ratio = 0.55
+        
+    # convert to mesh
+    bpy.ops.object.convert(target='MESH')
+    
+# deselect all objects
+bpy.ops.object.select_all(action='DESELECT')
+
+# select curve and delete 
+bpy.context.view_layer.objects.active = bpy.data.objects[name]
+bpy.ops.object.delete()
+
+# building the timing objects
+timing_objects = [
+    "AC_START_0",
+    "AC_START_1",
+    "AC_PIT_0",
+    "AC_PIT_1",
+    "AC_HOTLAP_START_0",
+    "AC_TIME_0_L",
+    "AC_TIME_0_R",
+    "AC_TIME_1_L",
+    "AC_TIME_1_R"
+]
+
+def spawn_volume(name: str, pos: list[float, float, float]) -> None:
+    bpy.ops.object.volume_add(align='WORLD', location=(pos[0], pos[1], pos[2]), scale=(1, 1, 1))
+    bpy.context.object.name = name
+    
+    # ensure object Y is facing up and Z is forward
+    bpy.context.scene.transform_orientation_slots[0].type = 'LOCAL' # switch to local coordinate mode
+    bpy.context.object.rotation_euler[0] = 1.5708 # apply 90deg rotation
+
+# spawn the timing objects    
+for timing in timing_objects:
+    
+    spawn_volume(timing, track_conf[timing])
+    
 filepath = os.path.join(os.path.join(config['blend']), f"{name}.blend") 
 
 # save blend file

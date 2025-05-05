@@ -133,14 +133,12 @@ class GeneticAlgorithm:
             offspring = self.crossover(parents)
 
             # perform mutations based on mutation rate
-            mutation_count = int(len(offspring) * self.mutation_rate)
-            mutation_selection = np.linspace(
-                0, mutation_count - 1, mutation_count, dtype=np.int_
-            )
-
-            for mutate in mutation_selection:
-                self.generator.mutate(offspring[mutate])
-
+            for mutation_idx in range(0,len(offspring)):
+                mutate_prob = self.seed_generator.random()
+                
+                if mutate_prob < self.mutation_rate:
+                    self.generator.mutate(offspring[mutation_idx])
+                    
             # create a new population and slice to only get self.population_size
             parents.extend(offspring)
             self.population = parents[: self.population_size]

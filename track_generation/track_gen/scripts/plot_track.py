@@ -13,7 +13,7 @@ def plot_track(track) -> None:
     # generate range of t values using len of self.CURVATURE_PROFILE
 
     # convert bezier coords to numpy arrays
-    bezier_coords = np.asarray(track.BEZIER_COORDINATES)
+    bezier_coords = np.asarray(track.TRACK_COORDINATES)
     
     plt.plot(
         bezier_coords[:, 0], bezier_coords[:, 1]

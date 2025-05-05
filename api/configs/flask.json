@@ -1,0 +1,34 @@
+{
+    "parent_endpoint" : "v1",
+    "debug" : false,
+    "clear_logs" : true,
+    "logs" : {
+        "werkzeug" : "logs/werkzeug/",
+        "fantasy" : "logs/fantasy/"
+    },
+    "cors": {
+        "origins" : "*",  
+        "methods" : ["GET", "HEAD", "POST", "OPTIONS", "PUT", "PATCH", "DELETE"],
+        "expose_headers" : null,  
+        "allow_headers" : "*",
+        "supports_credentials" : false,  
+        "max_age" : null,  
+        "send_wildcard" : false,  
+        "vary_header" : true
+    },
+    "limiter": {
+        "storage_backend": "memory",
+        "redis": {
+            "default_limits" : ["200 per day", "50 per hour"],
+            "storage_uri" : ""
+        },
+        "memory": {
+            "default_limits" : ["200 per day", "50 per hour"],
+            "storage_uri" : "memory://"
+        }
+    },
+    "ea": {
+        "runs_path" : "C:\\Users\\dgasi\\Desktop\\workspace\\environment_shaping_with_ac\\dissertation_project\\track_generation\\tracks"
+    }
+    
+}
